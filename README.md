@@ -4,11 +4,6 @@ A full-stack real-time chat application built with the MERN stack and Socket.io.
 
 ![MERN](https://img.shields.io/badge/Stack-MERN-green) ![Socket.io](https://img.shields.io/badge/Realtime-Socket.io-blue) ![Status](https://img.shields.io/badge/Status-Live-brightgreen)
 
-## 🌐 Live Application
-
-- **Frontend**: [https://real-time-chat-application-zeta-five.vercel.app](https://real-time-chat-application-zeta-five.vercel.app)
-- **Backend API**: [https://realtime-chat-application-1-ffxh.onrender.com](https://realtime-chat-application-1-ffxh.onrender.com)
-
 ## Features
 
 - 🔐 JWT Authentication (Register/Login)
@@ -35,7 +30,7 @@ A full-stack real-time chat application built with the MERN stack and Socket.io.
 ## Prerequisites
 
 - **Node.js** v18+
-- **MongoDB** (local or [Atlas](https://www.mongodb.com/atlas))
+- **MongoDB** atlas
 
 ## Setup
 
@@ -76,10 +71,6 @@ npm run dev
 cd client
 npm run dev
 ```
-
-- **Client**: http://localhost:3000
-- **Server**: http://localhost:5000
-
 ## Project Structure
 
 ```
