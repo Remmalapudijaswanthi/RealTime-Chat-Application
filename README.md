@@ -2,7 +2,12 @@
 
 A full-stack real-time chat application built with the MERN stack and Socket.io.
 
-![MERN](https://img.shields.io/badge/Stack-MERN-green) ![Socket.io](https://img.shields.io/badge/Realtime-Socket.io-blue)
+![MERN](https://img.shields.io/badge/Stack-MERN-green) ![Socket.io](https://img.shields.io/badge/Realtime-Socket.io-blue) ![Status](https://img.shields.io/badge/Status-Live-brightgreen)
+
+## 🌐 Live Application
+
+- **Frontend**: [https://real-time-chat-application-zeta-five.vercel.app](https://real-time-chat-application-zeta-five.vercel.app)
+- **Backend API**: [https://realtime-chat-application-1-ffxh.onrender.com](https://realtime-chat-application-1-ffxh.onrender.com)
 
 ## Features
 
