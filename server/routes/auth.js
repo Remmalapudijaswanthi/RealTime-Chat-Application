@@ -1,9 +1,22 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
+const { sendOTP, verifyOTP } = require('../utils/otpHelper');
 
 const router = express.Router();
+
+// Rate limiter for OTP routes
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 OTP requests per window
+  message: { 
+    success: false,
+    message: 'Too many OTP requests. Try again in 15 minutes.'
+  }
+});
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -47,6 +60,7 @@ router.post('/register', async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         status: user.status,
+        settings: user.settings,
       },
     });
   } catch (error) {
@@ -90,6 +104,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         status: user.status,
+        settings: user.settings,
       },
     });
   } catch (error) {
@@ -110,10 +125,197 @@ router.get('/me', authMiddleware, async (req, res) => {
       status: user.status,
       lastSeen: user.lastSeen,
       createdAt: user.createdAt,
+      settings: user.settings,
     });
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- OTP ROUTES ---
+
+// POST /api/auth/send-otp
+router.post('/send-otp', otpLimiter, async (req, res) => {
+  try {
+    const { email, type } = req.body;
+    
+    if (!email || !type) {
+      return res.status(400).json({ message: 'Email and type are required' });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    if (type === 'register') {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+    } else if (type === 'login' || type === 'forgot-password') {
+      const existingUser = await User.findOne({ email });
+      if (!existingUser) {
+        return res.status(400).json({ message: 'No account with this email' });
+      }
+    }
+
+    await sendOTP(email, type);
+    
+    res.json({ 
+      success: true, 
+      message: "OTP sent to your email" 
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({ message: 'Failed to send email. Try again.' });
+  }
+});
+
+// POST /api/auth/verify-register
+router.post('/verify-register', async (req, res) => {
+  try {
+    const { username, email, password, otp } = req.body;
+
+    if (!username || !email || !password || !otp) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Verify OTP first
+    const verification = await verifyOTP(email, otp, 'register');
+    if (!verification.success) {
+      return res.status(400).json({ message: verification.message });
+    }
+
+    // Check if username already taken (email was checked in send-otp)
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already taken' });
+    }
+
+    // Password length check
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Create user (User model handles hashing via pre-save hook)
+    const user = await User.create({ username, email, password });
+
+    // Generate JWT
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        status: user.status,
+        settings: user.settings,
+      },
+    });
+  } catch (error) {
+    console.error('Verify Register error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+});
+
+// POST /api/auth/verify-login
+router.post('/verify-login', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    // Verify OTP
+    const verification = await verifyOTP(email, otp, 'login');
+    if (!verification.success) {
+      return res.status(400).json({ message: verification.message });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Generate JWT
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        status: user.status,
+        settings: user.settings,
+      },
+    });
+  } catch (error) {
+    console.error('Verify Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+});
+
+// POST /api/auth/forgot-password/send
+router.post('/forgot-password/send', otpLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'No account with this email' });
+
+    await sendOTP(email, 'forgot-password');
+    res.json({ success: true, message: 'OTP sent for password reset' });
+  } catch (error) {
+    console.error('Forgot password send error:', error);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
+});
+
+// POST /api/auth/forgot-password/reset
+router.post('/forgot-password/reset', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Verify OTP
+    const verification = await verifyOTP(email, otp, 'forgot-password');
+    if (!verification.success) {
+      return res.status(400).json({ message: verification.message });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'User not found' });
+
+    // Update password (pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error during password reset' });
   }
 });
 

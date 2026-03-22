@@ -51,17 +51,84 @@ module.exports = (io) => {
     // --- SEND MESSAGE ---
     socket.on('send_message', async (data) => {
       try {
-        const { roomId, content, type = 'text', fileName = '', fileSize = '' } = data;
+        const {
+          roomId,
+          content,
+          type = 'text',
+          fileName = '',
+          fileSize = '',
+          replyTo = null,
+          metadata = null,
+        } = data;
 
-        // Create message
-        const message = await Message.create({
+        // Check if sender is blocked by any room member
+        const room = await ChatRoom.findById(roomId);
+        if (!room) {
+          socket.emit('error', { message: 'Room not found' });
+          return;
+        }
+
+        // For private rooms, check block status
+        if (room.type === 'private') {
+          const otherMemberId = room.members.find(m => m.toString() !== userId);
+          if (otherMemberId) {
+            const otherUser = await User.findById(otherMemberId);
+            if (otherUser && otherUser.blockedUsers?.includes(userId)) {
+              socket.emit('error', { message: 'You cannot send messages to this user' });
+              return;
+            }
+            // Check if current user blocked the other
+            const currentUser = await User.findById(userId);
+            if (currentUser && currentUser.blockedUsers?.includes(otherMemberId.toString())) {
+              socket.emit('error', { message: 'You have blocked this user. Unblock to send messages.' });
+              return;
+            }
+          }
+        }
+
+        // Build message data
+        const messageData = {
           sender: userId,
           room: roomId,
-          content,
+          content: content || '',
           type,
           fileName,
           fileSize,
-        });
+        };
+
+        // Add replyTo if present
+        if (replyTo && replyTo.messageId) {
+          messageData.replyTo = {
+            messageId: replyTo.messageId,
+            content: replyTo.content || '',
+            senderName: replyTo.senderName || '',
+            type: replyTo.type || 'text',
+          };
+        }
+
+        // Add metadata for voice/audio
+        if (metadata) {
+          messageData.metadata = {
+            duration: metadata.duration || 0,
+            waveform: metadata.waveform || [],
+          };
+        }
+
+        // Create message
+        const message = await Message.create(messageData);
+
+        // Check delivery status (for private rooms)
+        if (room.type === 'private') {
+          const otherMemberId = room.members.find(m => m.toString() !== userId);
+          if (otherMemberId && onlineUsers.has(otherMemberId.toString())) {
+            message.delivered = true;
+            await message.save();
+          }
+        } else {
+          // Group chats reach the server and are emitted to all
+          message.delivered = true;
+          await message.save();
+        }
 
         // Populate sender info
         const populatedMessage = await Message.findById(message._id)
@@ -76,14 +143,12 @@ module.exports = (io) => {
         io.to(roomId).emit('receive_message', populatedMessage);
 
         // Notify room members who aren't in the room
-        const room = await ChatRoom.findById(roomId);
         if (room) {
           room.members.forEach((memberId) => {
             const memberIdStr = memberId.toString();
             if (memberIdStr !== userId) {
               const memberSocketId = onlineUsers.get(memberIdStr);
               if (memberSocketId) {
-                // Notice the new_room event will trigger a refetch if user doesn't have it
                 io.to(memberSocketId).emit('new_room', {
                   roomId,
                   message: populatedMessage,
@@ -95,6 +160,109 @@ module.exports = (io) => {
       } catch (error) {
         console.error('Send message error:', error);
         socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    // --- REACTIONS ---
+    socket.on('add_reaction', async ({ messageId, roomId, emoji }) => {
+      try {
+        const message = await Message.findById(messageId);
+        if (!message) return;
+
+        // Find existing reaction for this emoji
+        const existing = message.reactions.find(r => r.emoji === emoji);
+
+        if (existing) {
+          // If user already reacted with this emoji, remove it (toggle)
+          if (existing.users.includes(userId)) {
+            existing.users = existing.users.filter(u => u.toString() !== userId);
+            if (existing.users.length === 0) {
+              message.reactions = message.reactions.filter(r => r.emoji !== emoji);
+            }
+          } else {
+            // Remove user from any other reaction on this message
+            message.reactions.forEach(r => {
+              r.users = r.users.filter(u => u.toString() !== userId);
+            });
+            message.reactions = message.reactions.filter(r => r.users.length > 0);
+            // Re-find or create the reaction
+            const refreshed = message.reactions.find(r => r.emoji === emoji);
+            if (refreshed) {
+              refreshed.users.push(userId);
+            } else {
+              message.reactions.push({ emoji, users: [userId] });
+            }
+          }
+        } else {
+          // Remove user from any other reaction
+          message.reactions.forEach(r => {
+            r.users = r.users.filter(u => u.toString() !== userId);
+          });
+          message.reactions = message.reactions.filter(r => r.users.length > 0);
+          // Add new reaction
+          message.reactions.push({ emoji, users: [userId] });
+        }
+
+        await message.save();
+
+        io.to(roomId).emit('reaction_updated', {
+          messageId,
+          reactions: message.reactions,
+        });
+      } catch (error) {
+        console.error('Add reaction error:', error);
+      }
+    });
+
+    // --- PIN / UNPIN ---
+    socket.on('pin_message', async ({ roomId, messageId }) => {
+      try {
+        const room = await ChatRoom.findById(roomId);
+        if (!room) return;
+
+        if (room.pinnedMessages.length >= 3) {
+          socket.emit('error', { message: 'Maximum 3 pinned messages' });
+          return;
+        }
+
+        room.pinnedMessages.push({
+          message: messageId,
+          pinnedBy: userId,
+          pinnedAt: new Date(),
+        });
+        await room.save();
+
+        const updatedRoom = await ChatRoom.findById(roomId)
+          .populate({
+            path: 'pinnedMessages.message',
+            populate: { path: 'sender', select: 'username avatar' },
+          });
+
+        io.to(roomId).emit('message_pinned', {
+          roomId,
+          pinnedMessages: updatedRoom.pinnedMessages,
+        });
+      } catch (error) {
+        console.error('Pin message error:', error);
+      }
+    });
+
+    socket.on('unpin_message', async ({ roomId, messageId }) => {
+      try {
+        const room = await ChatRoom.findById(roomId);
+        if (!room) return;
+
+        room.pinnedMessages = room.pinnedMessages.filter(
+          p => p.message.toString() !== messageId
+        );
+        await room.save();
+
+        io.to(roomId).emit('message_unpinned', {
+          roomId,
+          pinnedMessages: room.pinnedMessages,
+        });
+      } catch (error) {
+        console.error('Unpin message error:', error);
       }
     });
 
@@ -141,10 +309,8 @@ module.exports = (io) => {
       console.log(`User disconnected: ${socket.user.username}`);
       onlineUsers.delete(userId);
 
-      // Fetch user to check their settings before updating status
       const user = await User.findById(userId);
       if (user && user.status !== 'Invisible') {
-        // Only update to Invisible if they were actually online/away/busy
         await User.findByIdAndUpdate(userId, {
           status: 'Invisible',
           lastSeen: new Date(),

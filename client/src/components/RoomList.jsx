@@ -1,20 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
 import { formatTime } from '../utils/formatTime';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  show: { opacity: 1, x: 0 },
-};
+import { useAuth } from '../context/AuthContext';
 
 export default function RoomList({
   rooms,
@@ -24,79 +9,90 @@ export default function RoomList({
   getRoomAvatar,
   isRoomOnline,
   unreadCounts,
-  typingUsers,
+  typingUsers = {},
+  onContextMenu,
 }) {
+  const { user } = useAuth();
   if (rooms.length === 0) {
     return (
-      <div className="rooms-empty">
-        <p>No conversations yet</p>
-        <p className="rooms-empty-sub">Search for users to start chatting</p>
+      <div className="empty-rooms">
+        <p>No conversations found</p>
       </div>
     );
   }
 
   return (
-    <motion.div
-      className="room-list"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <AnimatePresence>
-        {rooms.map((room) => {
-          const isActive = currentRoom?._id === room._id;
-          const unread = unreadCounts[room._id] || 0;
-          const typingUser = typingUsers[room._id];
-          const lastMsg = room.lastMessage;
+    <div className="room-list">
+      {rooms.map((room) => {
+        const isActive = currentRoom?._id === room._id;
+        const unreadCount = unreadCounts[room._id] || 0;
+        const typingUser = typingUsers[room._id];
+        
+        return (
+          <div
+            key={room._id}
+            className={`room-item ${isActive ? 'active' : ''} ${
+              unreadCount > 0 ? 'unread' : ''
+            }`}
+            onClick={() => onSelectRoom(room)}
+            onContextMenu={(e) => onContextMenu(e, room)}
+          >
+            <div className="room-avatar-wrapper">
+              <img
+                src={getRoomAvatar(room)}
+                alt={getRoomName(room)}
+                className="room-avatar"
+              />
+              {isRoomOnline(room) && <span className="online-dot" />}
+            </div>
 
-          return (
-            <motion.div
-              key={room._id}
-              className={`room-item ${isActive ? 'active' : ''}`}
-              variants={itemVariants}
-              onClick={() => onSelectRoom(room)}
-              whileHover={{ backgroundColor: isActive ? undefined : 'rgba(124, 58, 237, 0.08)' }}
-              layout
-            >
-              <div className="room-avatar-wrapper">
-                <img src={getRoomAvatar(room)} alt={getRoomName(room)} className="room-avatar" />
-                {isRoomOnline(room) && <span className="online-dot pulse" />}
+            <div className="room-info">
+              <div className="room-info-top">
+                <span className="room-name">{getRoomName(room)}</span>
+                <span className="room-time">
+                  {room.lastMessage
+                    ? formatTime(room.lastMessage.createdAt)
+                    : ''}
+                </span>
               </div>
-              <div className="room-info">
-                <div className="room-info-top">
-                  <span className="room-name">{getRoomName(room)}</span>
-                  {lastMsg && (
-                    <span className="room-time">{formatTime(lastMsg.createdAt || room.updatedAt)}</span>
-                  )}
-                </div>
-                <div className="room-info-bottom">
-                  {typingUser ? (
-                    <span className="room-typing">{typingUser.username} is typing...</span>
-                  ) : lastMsg ? (
+
+              <div className="room-info-bottom">
+                <div className="room-last-msg-row">
+                <div className="room-message-text">
                     <span className="room-last-message">
-                      {lastMsg.sender?.username && `${lastMsg.sender.username}: `}
-                      {lastMsg.content?.substring(0, 40)}
-                      {lastMsg.content?.length > 40 ? '...' : ''}
+                      {user?.settings?.lockedChats?.includes(room._id) ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#818CF8' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                          </svg>
+                          Locked
+                        </span>
+                      ) : typingUser ? (
+                        <span className="room-typing-text">
+                          {typingUser.username} is typing...
+                        </span>
+                      ) : (
+                        <>
+                          {room.lastMessage?.sender?._id === user?._id && 'You: '}
+                          {room.lastMessage?.type === 'image' && '📷 Image'}
+                          {room.lastMessage?.type === 'video' && '🎥 Video'}
+                          {room.lastMessage?.type === 'document' && '📄 Document'}
+                          {room.lastMessage?.type === 'voice' && '🎤 Voice message'}
+                          {room.lastMessage?.type === 'text' && (room.lastMessage?.content || '')}
+                        </>
+                      )}
                     </span>
-                  ) : (
-                    <span className="room-last-message empty">No messages yet</span>
-                  )}
-                  {unread > 0 && (
-                    <motion.span
-                      className="unread-badge"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                    >
-                      {unread}
-                    </motion.span>
-                  )}
                 </div>
+                
+                {unreadCount > 0 && (
+                  <span className="unread-badge">{unreadCount}</span>
+                )}
               </div>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-    </motion.div>
+            </div>
+          </div>
+        </div>
+      );
+      })}
+    </div>
   );
 }

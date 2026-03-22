@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
+import { saveWallpaper, applyWallpaperToDOM } from '../utils/wallpaperStorage';
 
 const AuthContext = createContext(null);
 
@@ -19,6 +20,13 @@ export function AuthProvider({ children }) {
       try {
         const res = await axiosInstance.get('/api/auth/me');
         setUser(res.data);
+        if (res.data?.settings?.chatWallpaper) {
+          try {
+            const parsed = JSON.parse(res.data.settings.chatWallpaper);
+            applyWallpaperToDOM(parsed);
+            saveWallpaper(parsed);
+          } catch (e) { console.error('Parse wallpaper error:', e); }
+        }
       } catch (error) {
         console.error('Failed to load user:', error);
         localStorage.removeItem('token');
@@ -39,6 +47,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
+    if (userData?.settings?.chatWallpaper) {
+      try {
+        const parsed = JSON.parse(userData.settings.chatWallpaper);
+        applyWallpaperToDOM(parsed);
+        saveWallpaper(parsed);
+      } catch (e) { console.error('Parse wallpaper error:', e); }
+    }
     return userData;
   };
 
@@ -63,8 +78,23 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateProfile = async (updates) => {
+    try {
+      const res = await axiosInstance.patch('/api/users/profile', updates);
+      setUser(prev => {
+        const updated = { ...prev, ...res.data };
+        localStorage.setItem('user', JSON.stringify(updated));
+        return updated;
+      });
+      return res.data;
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

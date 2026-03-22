@@ -19,12 +19,12 @@ const messageSchema = new mongoose.Schema(
     },
     content: {
       type: String,
-      required: [true, 'Message content is required'],
+      default: '',
       trim: true,
     },
     type: {
       type: String,
-      enum: ['text', 'image', 'file'],
+      enum: ['text', 'image', 'video', 'document', 'audio', 'voice', 'file'],
       default: 'text',
     },
     fileName: {
@@ -35,13 +35,45 @@ const messageSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    caption: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     read: {
+      type: Boolean,
+      default: false,
+    },
+    delivered: {
       type: Boolean,
       default: false,
     },
     edited: {
       type: Boolean,
       default: false,
+    },
+    // Message reactions
+    reactions: [
+      {
+        emoji: { type: String, required: true },
+        users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      },
+    ],
+    // Reply to another message
+    replyTo: {
+      messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message', default: null },
+      content: { type: String, default: '' },
+      senderName: { type: String, default: '' },
+      type: { type: String, default: 'text' },
+    },
+    metadata: {
+      duration: { type: Number, default: 0 },
+      waveform: { type: [Number], default: [] },
+    },
+    // Forwarded message info
+    forwardedFrom: {
+      senderName: { type: String, default: null },
+      messageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message', default: null },
     },
   },
   {

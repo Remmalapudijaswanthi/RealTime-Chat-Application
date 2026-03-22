@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { loadWallpaper, applyWallpaperToDOM } from './utils/wallpaperStorage';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import AuthPage from './pages/AuthPage';
 import ChatPage from './pages/ChatPage';
 
 function ProtectedRoute({ children }) {
@@ -42,7 +43,7 @@ function AppRoutes() {
           path="/login"
           element={
             <PublicRoute>
-              <LoginPage />
+              <AuthPage />
             </PublicRoute>
           }
         />
@@ -50,7 +51,7 @@ function AppRoutes() {
           path="/register"
           element={
             <PublicRoute>
-              <RegisterPage />
+              <AuthPage />
             </PublicRoute>
           }
         />
@@ -71,6 +72,15 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const saved = loadWallpaper();
+    if (saved && saved.id !== 'default') {
+      setTimeout(() => {
+        applyWallpaperToDOM(saved);
+      }, 200);
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

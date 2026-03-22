@@ -23,6 +23,19 @@ const chatRoomSchema = new mongoose.Schema(
       ref: 'Message',
       default: null,
     },
+    pinnedMessages: [
+      {
+        message: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
+        pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        pinnedAt: { type: Date, default: Date.now },
+      },
+    ],
+    deletedBy: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        deletedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

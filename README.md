@@ -14,6 +14,7 @@ A full-stack real-time chat application built with the MERN stack and Socket.io.
 - ✅ Read receipts (single/double tick)
 - ✏️ Edit & delete messages
 - 🎨 Modern dark UI with animations (Framer Motion)
+- 📧 SMTP Email OTP Verification (Register/Login)
 - 📱 Responsive design
 
 ## Tech Stack
@@ -59,6 +60,18 @@ PORT=5000
 ```env
 VITE_API_URL=http://localhost:5000
 ```
+
+## Email Setup (Gmail SMTP)
+
+1. Create a Gmail account for PingMe
+2. Go to [myaccount.google.com/security](https://myaccount.google.com/security)
+3. Enable **2-Step Verification**
+4. Search for "**App Passwords**"
+5. Generate a password for "**PingMe**"
+6. Copy the 16-digit password to `SMTP_PASS` in `.env`
+
+> [!NOTE]
+> Never commit your `.env` file to GitHub.
 
 ### 3. Run
 
@@ -114,6 +127,11 @@ npm run dev
 | GET    | `/api/chats/rooms`                | List user's rooms        |
 | GET    | `/api/chats/room/:id/messages`    | Get paginated messages   |
 | PATCH  | `/api/chats/message/:id`          | Edit message             |
+| POST   | `/api/auth/send-otp`              | Send verification code   |
+| POST   | `/api/auth/verify-register`       | Register with OTP        |
+| POST   | `/api/auth/verify-login`          | Login with OTP           |
+| POST   | `/api/auth/forgot-password/send`  | Request password reset   |
+| POST   | `/api/auth/forgot-password/reset` | Reset password with OTP  |
 | DELETE | `/api/chats/message/:id`          | Delete message           |
 
 ## Socket.io Events

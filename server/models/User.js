@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     avatar: {
-      type: String, // Will store base64 string or URL
+      type: String,
       default: '',
     },
     bio: {
@@ -43,13 +43,44 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    blockedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    mutedChats: [
+      {
+        room: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatRoom' },
+        mutedUntil: { type: Date, default: null }, // null = forever
+      },
+    ],
+    contacts: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        nickname: { type: String, default: '' },
+      },
+    ],
     settings: {
       showLastSeen: { type: Boolean, default: true },
       showOnlineStatus: { type: Boolean, default: true },
       readReceipts: { type: Boolean, default: true },
       notifications: { type: Boolean, default: true },
-      theme: { type: String, default: 'dark-nebula' }
-    }
+      theme: { type: String, default: 'dark-nebula' },
+      appBackground: { type: String, default: '#0A0A0A' },
+      chatWallpaper: { type: String, default: 'default' },
+      chatWallpaper: { type: String, default: 'default' },
+      messageTemplates: { type: [String], default: [] },
+      chatLockPin: { type: String, default: null }, // Hashed PIN
+      lockedChats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ChatRoom' }],
+      chatBackgrounds: { type: Map, of: String, default: {} }, // roomId -> background
+    },
+    starredMessages: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+      },
+    ],
   },
   {
     timestamps: true,
@@ -58,33 +89,40 @@ const userSchema = new mongoose.Schema(
 
 // Generate avatar from initials before saving
 userSchema.pre('save', async function (next) {
-  // Generate avatar from initials if not set
   if (!this.avatar || this.avatar === '') {
-    const initials = this.username
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
     this.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
       this.username
     )}&background=7c3aed&color=fff&bold=true&size=128`;
   }
 
-  // Hash password only if modified
-  if (!this.isModified('password')) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
+  if (this.isModified('password')) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    } catch (err) {
+      return next(err);
+    }
   }
+
+  if (this.isModified('settings.chatLockPin') && this.settings.chatLockPin) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.settings.chatLockPin = await bcrypt.hash(this.settings.chatLockPin, salt);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  next();
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.comparePin = async function (candidatePin) {
+  if (!this.settings.chatLockPin) return false;
+  return bcrypt.compare(candidatePin, this.settings.chatLockPin);
 };
 
 module.exports = mongoose.model('User', userSchema);

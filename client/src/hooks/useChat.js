@@ -13,6 +13,8 @@ export function useChat() {
   const [page, setPage] = useState(1);
   const [typingUsers, setTypingUsers] = useState({});
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [replyingTo, setReplyingTo] = useState(null);
 
   const { socket } = useSocket();
   const { user } = useAuth();
@@ -57,6 +59,16 @@ export function useChat() {
     await fetchMessages(currentRoom._id, page + 1);
   }, [currentRoom, hasMoreMessages, loadingMessages, page, fetchMessages]);
 
+  // Fetch pinned messages
+  const fetchPinned = useCallback(async (roomId) => {
+    try {
+      const res = await axiosInstance.get(`/api/chats/room/${roomId}/pinned`);
+      setPinnedMessages(res.data);
+    } catch (error) {
+      console.error('Failed to fetch pinned:', error);
+    }
+  }, []);
+
   // Select a room
   const selectRoom = useCallback(
     async (room) => {
@@ -66,8 +78,10 @@ export function useChat() {
       setMessages([]);
       setPage(1);
       setHasMoreMessages(true);
+      setReplyingTo(null);
 
       await fetchMessages(room._id);
+      await fetchPinned(room._id);
 
       // Join room via socket
       if (socket) {
@@ -78,18 +92,66 @@ export function useChat() {
       // Clear unread count
       setUnreadCounts((prev) => ({ ...prev, [room._id]: 0 }));
     },
-    [currentRoom, socket, fetchMessages]
+    [currentRoom, socket, fetchMessages, fetchPinned]
   );
 
   // Send message
   const sendMessage = useCallback(
-    (content) => {
-      if (!socket || !currentRoom || !content.trim()) return;
-      socket.emit('send_message', {
+    (content, options = {}) => {
+      if (!socket || !currentRoom) return;
+      if (!content.trim() && !options.type) return;
+
+      const data = {
         roomId: currentRoom._id,
         content: content.trim(),
-        type: 'text',
+        type: options.type || 'text',
+        fileName: options.fileName || '',
+        fileSize: options.fileSize || '',
+        metadata: options.metadata || null,
+      };
+
+      // Attach reply
+      if (replyingTo) {
+        data.replyTo = {
+          messageId: replyingTo._id,
+          content: replyingTo.content?.substring(0, 60) || '',
+          senderName: replyingTo.sender?.username || '',
+          type: replyingTo.type || 'text',
+        };
+      }
+
+      socket.emit('send_message', data);
+      setReplyingTo(null);
+    },
+    [socket, currentRoom, replyingTo]
+  );
+
+  // Add reaction
+  const addReaction = useCallback(
+    (messageId, emoji) => {
+      if (!socket || !currentRoom) return;
+      socket.emit('add_reaction', {
+        messageId,
+        roomId: currentRoom._id,
+        emoji,
       });
+    },
+    [socket, currentRoom]
+  );
+
+  // Pin / Unpin
+  const pinMessage = useCallback(
+    (messageId) => {
+      if (!socket || !currentRoom) return;
+      socket.emit('pin_message', { roomId: currentRoom._id, messageId });
+    },
+    [socket, currentRoom]
+  );
+
+  const unpinMessage = useCallback(
+    (messageId) => {
+      if (!socket || !currentRoom) return;
+      socket.emit('unpin_message', { roomId: currentRoom._id, messageId });
     },
     [socket, currentRoom]
   );
@@ -118,6 +180,58 @@ export function useChat() {
     }
   }, []);
 
+  // Forward message
+  const forwardMessage = useCallback(async (messageId, roomIds) => {
+    try {
+      const res = await axiosInstance.post('/api/chats/forward', {
+        messageId,
+        roomIds,
+      });
+      // Optionally fetch rooms to update last messages if needed, 
+      // but socket will handle real-time updates for rooms.
+      return res.data;
+    } catch (error) {
+      console.error('Failed to forward message:', error);
+      throw error;
+    }
+  }, []);
+
+  // Star / Unstar message
+  const starMessage = useCallback(async (messageId) => {
+    try {
+      await axiosInstance.post(`/api/chats/message/${messageId}/star`);
+      // Update local state or user context if needed
+    } catch (error) {
+      console.error('Failed to star message:', error);
+      throw error;
+    }
+  }, []);
+
+  const unstarMessage = useCallback(async (messageId) => {
+    try {
+      await axiosInstance.delete(`/api/chats/message/${messageId}/star`);
+      // Update local state or user context if needed
+    } catch (error) {
+      console.error('Failed to unstar message:', error);
+      throw error;
+    }
+  }, []);
+
+  // Delete chat (logical)
+  const deleteChat = useCallback(async (roomId) => {
+    try {
+      await axiosInstance.delete(`/api/chats/room/${roomId}`);
+      setRooms((prev) => prev.filter((r) => r._id !== roomId));
+      if (currentRoom?._id === roomId) {
+        setCurrentRoom(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      throw error;
+    }
+  }, [currentRoom]);
+
   // Create or get private room
   const createRoom = useCallback(
     async (userId) => {
@@ -125,7 +239,6 @@ export function useChat() {
         const res = await axiosInstance.post('/api/chats/room', { userId });
         const room = res.data;
 
-        // Add to rooms list if not already there
         setRooms((prev) => {
           const exists = prev.find((r) => r._id === room._id);
           if (exists) return prev;
@@ -180,10 +293,8 @@ export function useChat() {
     const handleReceiveMessage = (message) => {
       if (currentRoom && message.room === currentRoom._id) {
         setMessages((prev) => [...prev, message]);
-        // Mark as read since we're in the room
         socket.emit('mark_read', { roomId: currentRoom._id });
       } else {
-        // Increment unread count
         setUnreadCounts((prev) => ({
           ...prev,
           [message.room]: (prev[message.room] || 0) + 1,
@@ -202,25 +313,25 @@ export function useChat() {
       );
     };
 
-    const handleUserTyping = ({ userId, username, roomId }) => {
-      if (userId === user?._id) return;
+    const handleUserTyping = ({ userId: typingUserId, username, roomId }) => {
+      if (typingUserId === user?._id) return;
       setTypingUsers((prev) => ({
         ...prev,
-        [roomId]: { userId, username },
+        [roomId]: { userId: typingUserId, username },
       }));
     };
 
-    const handleStopTyping = ({ userId, roomId }) => {
+    const handleStopTyping = ({ userId: typingUserId, roomId }) => {
       setTypingUsers((prev) => {
         const updated = { ...prev };
-        if (updated[roomId]?.userId === userId) {
+        if (updated[roomId]?.userId === typingUserId) {
           delete updated[roomId];
         }
         return updated;
       });
     };
 
-    const handleMessageRead = ({ roomId, readBy }) => {
+    const handleMessageRead = ({ roomId }) => {
       if (currentRoom && roomId === currentRoom._id) {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -230,9 +341,28 @@ export function useChat() {
       }
     };
 
-    const handleNewRoom = ({ roomId, message }) => {
-      // Refresh rooms when a new room is created or a message is sent in a room not in list
+    const handleNewRoom = () => {
       fetchRooms();
+    };
+
+    const handleReactionUpdated = ({ messageId, reactions }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, reactions } : msg
+        )
+      );
+    };
+
+    const handleMessagePinned = ({ roomId, pinnedMessages: pinned }) => {
+      if (currentRoom && roomId === currentRoom._id) {
+        setPinnedMessages(pinned);
+      }
+    };
+
+    const handleMessageUnpinned = ({ roomId, pinnedMessages: pinned }) => {
+      if (currentRoom && roomId === currentRoom._id) {
+        setPinnedMessages(pinned);
+      }
     };
 
     socket.on('receive_message', handleReceiveMessage);
@@ -240,6 +370,9 @@ export function useChat() {
     socket.on('user_stop_typing', handleStopTyping);
     socket.on('message_read', handleMessageRead);
     socket.on('new_room', handleNewRoom);
+    socket.on('reaction_updated', handleReactionUpdated);
+    socket.on('message_pinned', handleMessagePinned);
+    socket.on('message_unpinned', handleMessageUnpinned);
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
@@ -247,6 +380,9 @@ export function useChat() {
       socket.off('user_stop_typing', handleStopTyping);
       socket.off('message_read', handleMessageRead);
       socket.off('new_room', handleNewRoom);
+      socket.off('reaction_updated', handleReactionUpdated);
+      socket.off('message_pinned', handleMessagePinned);
+      socket.off('message_unpinned', handleMessageUnpinned);
     };
   }, [socket, currentRoom, user, fetchRooms]);
 
@@ -264,6 +400,9 @@ export function useChat() {
     hasMoreMessages,
     typingUsers,
     unreadCounts,
+    pinnedMessages,
+    replyingTo,
+    setReplyingTo,
     selectRoom,
     sendMessage,
     editMessage,
@@ -274,5 +413,12 @@ export function useChat() {
     stopTyping,
     loadMoreMessages,
     fetchRooms,
+    addReaction,
+    pinMessage,
+    unpinMessage,
+    forwardMessage,
+    starMessage,
+    unstarMessage,
+    deleteChat,
   };
 }
