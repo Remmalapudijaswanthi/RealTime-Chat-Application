@@ -110,7 +110,7 @@ const WallpaperModal = ({ isOpen, onClose, axiosInstance, user }) => {
               <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
                 {category.label}
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
                 {category.items.map(wp => (
                   <div
                     key={wp.id}

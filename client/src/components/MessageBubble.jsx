@@ -42,6 +42,25 @@ export default function MessageBubble({
   const [showLightbox, setShowLightbox] = useState(false);
   const [downloaded, setDownloaded] = useState(() => localStorage.getItem(`downloaded_${message._id}`) === 'true');
   const bubbleRef = useRef(null);
+  const longPressTimer = useRef(null);
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+    
+    longPressTimer.current = setTimeout(() => {
+      setContextPos({ x, y });
+      setShowContextMenu(true);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   const handleContextMenu = (e) => {
     e.preventDefault();
@@ -263,6 +282,9 @@ export default function MessageBubble({
       onMouseEnter={() => { setShowActions(true); setShowTimestamp(true); }}
       onMouseLeave={() => { setShowActions(false); setShowTimestamp(false); closeAllPopups(); }}
       onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
       ref={bubbleRef}
       style={{
         display: 'flex',
