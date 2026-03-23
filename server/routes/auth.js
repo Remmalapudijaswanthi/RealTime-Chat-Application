@@ -5,7 +5,6 @@ const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 const { sendOTP, verifyOTP } = require('../utils/otpHelper');
-const transporter = require('../config/mailer');
 
 const router = express.Router();
 
@@ -134,42 +133,113 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-// --- OTP ROUTES ---
-
 // POST /api/auth/send-otp
-router.post('/send-otp', async (req, res) => {
-  try {
-    const { email, type } = req.body
-    
-    if (!email || !type) {
-      return res.status(400).json({
+router.post('/send-otp',
+  otpLimiter,
+  async (req, res) => {
+    try {
+      let { email, type } = req.body
+      
+      // Validate
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is required'
+        })
+      }
+      
+      if (!type) {
+        return res.status(400).json({
+          success: false,
+          message: 'Type is required'
+        })
+      }
+      
+      // Clean email
+      email = email.toLowerCase().trim()
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email address'
+        })
+      }
+      
+      // Check for register type
+      if (type === 'register') {
+        const existing = await User.findOne({
+          email
+        })
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: 'Email already registered. Please login.'
+          })
+        }
+      }
+      
+      // Check for login type
+      if (type === 'login') {
+        const user = await User.findOne({ email })
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            message: 'No account found with this email.'
+          })
+        }
+      }
+      
+      // Send OTP
+      await sendOTP(email, type)
+      
+      return res.status(200).json({
+        success: true,
+        message: `OTP sent to ${email}`
+      })
+      
+    } catch (error) {
+      console.error('send-otp error:', 
+        error.message)
+      
+      let message = 'Failed to send OTP. Please try again.'
+      
+      if (error.code === 'EAUTH') {
+        message = 'Email service error. Contact support.'
+        console.error('SMTP AUTH FAILED -',
+          'Check SMTP_USER and SMTP_PASS in Render')
+      }
+      
+      if (error.code === 'ECONNECTION' || 
+          error.code === 'ETIMEDOUT') {
+        message = 'Email server unavailable. Please try again in a moment.'
+      }
+      
+      return res.status(500).json({
         success: false,
-        message: 'Email and type are required'
+        message
       })
     }
-    
-    await sendOTP(email, type)
-    
-    return res.status(200).json({
-      success: true,
-      message: 'OTP sent successfully'
-    })
-    
-  } catch (error) {
-    console.error('send-otp route error:', 
-      error.message)
-      
-    return res.status(500).json({
-      success: false,
-      message: error.message || 
-        'Failed to send OTP. Please try again.'
-    })
   }
-})
+)
 
 router.get('/test-smtp', async (req, res) => {
   try {
+    const nodemailer = require('nodemailer')
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      },
+      tls: { rejectUnauthorized: false }
+    })
     await transporter.verify()
+    transporter.close()
     res.json({
       success: true,
       message: 'SMTP is working correctly',

@@ -45,6 +45,8 @@ export default function ChatWindow({
   onPin,
   onUnpin,
   scrollToMessageId,
+  isMobile,
+  onShowSidebar,
 }) {
   const [inputValue, setInputValue] = useState('');
   const [editingMessage, setEditingMessage] = useState(null);

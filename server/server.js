@@ -9,6 +9,28 @@ const cron = require('node-cron');
 // Load env vars
 dotenv.config();
 
+// Check required env vars
+const requiredEnvVars = [
+  'MONGO_URI',
+  'JWT_SECRET', 
+  'SMTP_USER',
+  'SMTP_PASS'
+]
+
+const missing = requiredEnvVars.filter(
+  key => !process.env[key]
+)
+
+if (missing.length > 0) {
+  console.error('MISSING ENV VARIABLES:', 
+    missing.join(', '))
+  console.error('Server may not work correctly!')
+} else {
+  console.log('All environment variables set ✓')
+  console.log('SMTP_USER:', process.env.SMTP_USER)
+  console.log('PORT:', process.env.SMTP_PORT || 465)
+}
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');

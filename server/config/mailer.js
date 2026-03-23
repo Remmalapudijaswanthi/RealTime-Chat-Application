@@ -1,31 +1,49 @@
 const nodemailer = require('nodemailer')
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-})
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    pool: false
+  })
+}
 
-transporter.verify((error) => {
-  if (error) {
-    console.error('SMTP connection failed:',
+const sendEmail = async (to, subject, html) => {
+  const transporter = createTransporter()
+  
+  try {
+    const info = await transporter.sendMail({
+      from: `"PingMe" <${process.env.SMTP_USER}>`,
+      to: to,
+      subject: subject,
+      html: html
+    })
+    console.log('Email sent successfully:', 
+      info.messageId)
+    transporter.close()
+    return { success: true }
+    
+  } catch (error) {
+    console.error('Email send error:', 
       error.message)
-    console.error('SMTP_USER is',
-      process.env.SMTP_USER ? 'SET' : 'NOT SET')
-    console.error('SMTP_PASS is',
-      process.env.SMTP_PASS ? 'SET' : 'NOT SET')
-  } else {
-    console.log('SMTP ready to send emails ✓')
+    console.error('Error code:', error.code)
+    console.error('Error response:', 
+      error.response)
+    transporter.close()
+    throw error
   }
-})
+}
 
-module.exports = transporter
-
+module.exports = { sendEmail }

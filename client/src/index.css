@@ -2,16 +2,23 @@
 
 /* ===== CSS VARIABLES / DESIGN TOKENS ===== */
 .light-mode {
-  --bg-primary: #FDF8F0;
-  --bg-secondary: #FAF5EB;
-  --bg-surface: #F5EDD8;
-  --bg-elevated: #FFFFFF;
-  --text-primary: #2C1810;
-  --text-secondary: #6B4C35;
-  --text-muted: #A0856A;
-  --border: #E8D5B0;
-  --received-bubble: #FFFFFF;
-  --chat-bg: #FDF8F0;
+  --bg-primary: #FDF8F0 !important;
+  --bg-secondary: #FAF5EB !important;
+  --bg-surface: #F5EDD8 !important;
+  --bg-elevated: #FFFFFF !important;
+  --text-primary: #2C1810 !important;
+  --text-secondary: #6B4C35 !important;
+  --text-muted: #A0856A !important;
+  --border: #E8D5B0 !important;
+  --received-bubble: #FFFFFF !important;
+  --chat-bg: #FDF8F0 !important;
+  --accent: #7C3AED !important;
+  --accent-2: #4F46E5 !important;
+  --sidebar-bg: #FAF5EB !important;
+  --input-bg: #FFFFFF !important;
+  --logo-primary: #7C3AED !important;
+  --logo-secondary: #4F46E5 !important;
+  --shadow: rgba(139,90,43,0.1) !important;
 }
 
 .dark-mode, :root {
@@ -25,6 +32,13 @@
   --border: #2A2A2A;
   --received-bubble: #1E1E1E;
   --chat-bg: #0D0D0D;
+  --accent: #C084FC;
+  --accent-2: #818CF8;
+  --sidebar-bg: #0D0D14;
+  --input-bg: #1A1A1A;
+  --logo-primary: #C084FC;
+  --logo-secondary: #818CF8;
+  --shadow: rgba(0,0,0,0.3);
 }
 
 /* THEMES */
