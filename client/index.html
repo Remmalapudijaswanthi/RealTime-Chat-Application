@@ -10,17 +10,18 @@
     <title>PingMe</title>
     <script>
       (function() {
-        const mode = localStorage.getItem(
-          'pingme-color-mode'
-        ) || 'dark';
-        const cleanMode = mode.replace(/"/g, ''); 
-        document.documentElement.classList.add(
-          cleanMode + '-mode'
-        );
-        document.body && document.body.classList.add(
-          cleanMode + '-mode'
-        );
-        document.documentElement.setAttribute('data-theme', cleanMode);
+        try {
+          var mode = localStorage.getItem(
+            'pingme_color_mode'
+          )
+          if (mode === 'light') {
+            document.documentElement
+              .classList.add('light-mode')
+          } else {
+            document.documentElement
+              .classList.add('dark-mode')
+          }
+        } catch(e) {}
       })()
     </script>
   </head>

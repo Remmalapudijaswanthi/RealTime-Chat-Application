@@ -392,13 +392,35 @@ export default function AuthPage() {
                       {forgotStep === 3 && (
                         <form onSubmit={handleResetPassword} className="auth-form-step">
                           <h3 style={{ color: '#F8FAFC', marginBottom: '16px' }}>Set New Password</h3>
-                          <div className="auth-input-group">
+                          <div className="auth-input-group" style={{ position: 'relative' }}>
                             <label className="auth-float-label">New Password</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              style={{
+                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: showPassword ? '#C084FC' : '#6B7280', display: 'flex', marginTop: '8px'
+                              }}
+                            >
+                              {showPassword ? <EyeOpen /> : <EyeClosed />}
+                            </button>
                           </div>
-                          <div className="auth-input-group">
+                          <div className="auth-input-group" style={{ position: 'relative' }}>
                             <label className="auth-float-label">Confirm New Password</label>
-                            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                            <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              style={{
+                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: showConfirmPassword ? '#C084FC' : '#6B7280', display: 'flex', marginTop: '8px'
+                              }}
+                            >
+                              {showConfirmPassword ? <EyeOpen /> : <EyeClosed />}
+                            </button>
                           </div>
                           <button type="submit" className="auth-submit-btn" disabled={isLoading}>
                             {isLoading ? 'Resetting...' : 'Update Password'}
@@ -437,9 +459,20 @@ export default function AuthPage() {
                             <label className="auth-float-label">Email Address</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                           </div>
-                          <div className="auth-input-group">
+                          <div className="auth-input-group" style={{ position: 'relative' }}>
                             <label className="auth-float-label">Password</label>
                             <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              style={{
+                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: showPassword ? '#C084FC' : '#6B7280', display: 'flex', marginTop: '8px'
+                              }}
+                            >
+                              {showPassword ? <EyeOpen /> : <EyeClosed />}
+                            </button>
                           </div>
                           <div className="auth-forgot">
                             <button type="button" onClick={() => setForgotStep(1)}>Forgot Password?</button>
@@ -511,14 +544,36 @@ export default function AuthPage() {
                         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                         {fieldErrors.email && <span className="auth-field-error">{fieldErrors.email}</span>}
                       </div>
-                      <div className="auth-input-group field-stagger-3">
+                      <div className="auth-input-group field-stagger-3" style={{ position: 'relative' }}>
                         <label className="auth-float-label">Password</label>
                         <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: showPassword ? '#C084FC' : '#6B7280', display: 'flex', marginTop: '8px'
+                          }}
+                        >
+                          {showPassword ? <EyeOpen /> : <EyeClosed />}
+                        </button>
                         {fieldErrors.password && <span className="auth-field-error">{fieldErrors.password}</span>}
                       </div>
-                      <div className="auth-input-group field-stagger-4">
+                      <div className="auth-input-group field-stagger-4" style={{ position: 'relative' }}>
                         <label className="auth-float-label">Confirm Password</label>
                         <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={{
+                            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: showConfirmPassword ? '#C084FC' : '#6B7280', display: 'flex', marginTop: '8px'
+                          }}
+                        >
+                          {showConfirmPassword ? <EyeOpen /> : <EyeClosed />}
+                        </button>
                         {fieldErrors.confirmPassword && <span className="auth-field-error">{fieldErrors.confirmPassword}</span>}
                       </div>
                       <button className="auth-submit-btn field-stagger-5" onClick={() => handleSendOTP('register')} disabled={isLoading}>

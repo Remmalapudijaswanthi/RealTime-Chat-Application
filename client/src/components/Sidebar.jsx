@@ -41,22 +41,29 @@ export default function Sidebar({
     return () => window.removeEventListener('themeChange', handleThemeChange);
   }, []);
 
-  const toggleTheme = () => {
-    const newMode = isLightMode ? 'dark' : 'light';
-    setIsLightMode(!isLightMode);
-    localStorage.setItem('pingme-color-mode', newMode);
+  const toggleColorMode = (mode) => {
+    setIsLightMode(mode === 'light');
+    localStorage.setItem('pingme_color_mode', mode);
     
-    // Apply to document root AND body AND html
-    document.documentElement.classList.remove('light-mode', 'dark-mode');
-    document.body.classList.remove('light-mode', 'dark-mode');
+    if (mode === 'light') {
+      document.documentElement.classList.add('light-mode');
+      document.documentElement.classList.remove('dark-mode');
+    } else {
+      document.documentElement.classList.add('dark-mode');
+      document.documentElement.classList.remove('light-mode');
+    }
     
-    document.documentElement.classList.add(`${newMode}-mode`);
-    document.body.classList.add(`${newMode}-mode`);
-    
-    // Also set data attribute as backup
-    document.documentElement.setAttribute('data-theme', newMode);
-    
+    // Save to MongoDB
+    axiosInstance.patch('/api/users/settings', {
+      colorMode: mode
+    }).catch(console.error);
+
     window.dispatchEvent(new Event('themeChange'));
+  };
+
+  const handleToggleTheme = () => {
+    const newMode = isLightMode ? 'dark' : 'light';
+    toggleColorMode(newMode);
   };
 
   // Search users (debounced)
@@ -164,7 +171,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${contextMenu ? '' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <Logo size={32} />
@@ -174,7 +181,7 @@ export default function Sidebar({
           </h2>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button onClick={toggleTheme} title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', fontSize: '18px' }}>
+          <button onClick={handleToggleTheme} title="Toggle Theme" style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', fontSize: '18px' }}>
             {isLightMode ? '🌙' : '☀️'}
           </button>
           <button className="logout-btn" onClick={logout} title="Logout">

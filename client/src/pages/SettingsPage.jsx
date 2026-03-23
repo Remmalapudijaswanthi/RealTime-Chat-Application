@@ -4,21 +4,47 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../utils/axiosInstance';
 
-const THEMES = [
-  { id: 'dark-nebula', label: 'Dark Nebula', color: '#7c3aed' },
-  { id: 'midnight',    label: 'Midnight',    color: '#22c55e' },
-  { id: 'ocean',       label: 'Ocean',       color: '#06b6d4' },
-  { id: 'neon-pink',   label: 'Neon Pink',   color: '#ec4899' },
-  { id: 'forest',      label: 'Forest',      color: '#10b981' },
-  { id: 'sunset',      label: 'Sunset',      color: '#f97316' },
+const WALLPAPERS = [
+  {
+    id: 'default',
+    label: 'Default',
+    type: 'color',
+    value: '',
+    preview: 'var(--bg-primary)'
+  },
+  {
+    id: 'dark-purple',
+    label: 'Dark Purple',
+    type: 'gradient',
+    value: 'linear-gradient(160deg, #1a0533 0%, #0d0d0d 100%)'
+  },
+  {
+    id: 'ocean',
+    label: 'Ocean',
+    type: 'gradient',
+    value: 'linear-gradient(160deg, #012030 0%, #060b18 100%)'
+  },
+  {
+    id: 'dots',
+    label: 'Dots',
+    type: 'pattern',
+    bgColor: '#0D0D0D',
+    bgImage: 'radial-gradient(circle, #2A2A2A 1.5px, transparent 1.5px)',
+    bgSize: '20px 20px'
+  },
+  {
+    id: 'grid',
+    label: 'Grid',
+    type: 'pattern',
+    bgColor: '#0D0D0D',
+    bgImage: 'linear-gradient(#1A1A2E 1px, transparent 1px), linear-gradient(90deg, #1A1A2E 1px, transparent 1px)',
+    bgSize: '25px 25px'
+  }
 ];
 
 export default function SettingsPage() {
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
-
-  const savedTheme = () => localStorage.getItem('pingme-theme') || 'dark-nebula';
-  const [activeTheme, setActiveTheme] = useState(savedTheme);
 
   const [settings, setSettings] = useState({
     showLastSeen:      user?.settings?.showLastSeen      ?? true,
@@ -30,17 +56,55 @@ export default function SettingsPage() {
   const [oldPass, setOldPass]     = useState('');
   const [newPass, setNewPass]     = useState('');
   const [confPass, setConfPass]   = useState('');
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfPass, setShowConfPass] = useState(false);
   const [passMsg, setPassMsg]     = useState('');
   const [passErr, setPassErr]     = useState('');
   const [savingPass, setSavingPass] = useState(false);
+  const [selectedWallpaper, setSelectedWallpaper] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pingme_wallpaper');
+      return saved ? JSON.parse(saved) : WALLPAPERS[0];
+    } catch(e) { return WALLPAPERS[0]; }
+  });
 
-  const applyTheme = (id) => {
-    setActiveTheme(id);
-    document.body.setAttribute('data-theme', id === 'dark-nebula' ? '' : id);
-    localStorage.setItem('pingme-theme', id);
-    axiosInstance.patch('/api/users/settings', { theme: id }).then((res) => {
-      if (res.data?.user) setUser(res.data.user);
-    }).catch(() => {});
+  const applyWallpaper = (wp) => {
+    const el = document.getElementById('pingme-chat-area');
+    if (!el) return;
+    
+    el.style.cssText = '';
+    
+    if (!wp || wp.id === 'default') {
+      localStorage.removeItem('pingme_wallpaper');
+      // Save to server too
+      axiosInstance.patch('/api/users/settings', { chatWallpaper: 'default' });
+      return;
+    }
+    
+    if (wp.type === 'color') {
+      el.style.backgroundColor = wp.value;
+    } else if (wp.type === 'gradient') {
+      el.style.background = wp.value;
+    } else if (wp.type === 'pattern') {
+      el.style.backgroundColor = wp.bgColor;
+      el.style.backgroundImage = wp.bgImage;
+      el.style.backgroundSize = wp.bgSize;
+      el.style.backgroundRepeat = 'repeat';
+    }
+    
+    localStorage.setItem('pingme_wallpaper', JSON.stringify(wp));
+    
+    // Save to server
+    axiosInstance.patch('/api/users/settings', { 
+      chatWallpaper: wp.id 
+    }).catch(console.error);
+
+    window.dispatchEvent(
+      new CustomEvent('pingme:wallpaper', {
+        detail: wp
+      })
+    );
   };
 
   const handleToggle = async (key) => {
@@ -86,28 +150,97 @@ export default function SettingsPage() {
 
         <h1 className="profile-title">Settings</h1>
 
-        {/* === THEMES === */}
+        {/* === WALLPAPERS === */}
         <section className="settings-section">
-          <h2 className="settings-section-title">Chat Theme</h2>
-          <div className="theme-grid">
-            {THEMES.map((t) => (
-              <motion.button
-                key={t.id}
-                className={`theme-swatch ${activeTheme === t.id ? 'active' : ''}`}
-                style={{ '--swatch-color': t.color }}
-                onClick={() => applyTheme(t.id)}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.96 }}
+          <h2 className="settings-section-title">Chat Wallpaper</h2>
+          <div className="wallpaper-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {WALLPAPERS.map((wp) => (
+              <motion.div
+                key={wp.id}
+                onClick={() => setSelectedWallpaper(wp)}
+                style={{
+                  width: '100%',
+                  height: '80px',
+                  borderRadius: '12px',
+                  background: wp.type === 'color' ? wp.value || 'var(--bg-primary)' : 
+                             wp.type === 'gradient' ? wp.value : 
+                             wp.bgColor,
+                  backgroundImage: wp.type === 'pattern' ? wp.bgImage : 'none',
+                  backgroundSize: wp.type === 'pattern' ? wp.bgSize : 'auto',
+                  border: selectedWallpaper.id === wp.id ? '2px solid #C084FC' : '1px solid var(--border)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0 20px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                whileHover={{ scale: 1.01 }}
               >
-                <div className="swatch-dot" style={{ background: t.color }} />
-                <span>{t.label}</span>
-                {activeTheme === t.id && (
-                  <svg className="swatch-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </motion.button>
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.2)',
+                  zIndex: 0
+                }} />
+                <span style={{ 
+                  color: 'white', 
+                  fontWeight: '600', 
+                  zIndex: 1,
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                }}>{wp.label}</span>
+                
+                <div style={{ zIndex: 1, display: 'flex', alignItems: 'center' }}>
+                  {selectedWallpaper.id === wp.id ? (
+                    <div style={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      borderRadius: '50%', 
+                      background: '#C084FC', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      borderRadius: '50%', 
+                      border: '2px solid rgba(255,255,255,0.5)' 
+                    }} />
+                  )}
+                </div>
+              </motion.div>
             ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+            <motion.button 
+              className="auth-btn" 
+              style={{ flex: 1, margin: 0 }}
+              onClick={() => applyWallpaper(selectedWallpaper)}
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }}
+            >
+              Apply Wallpaper
+            </motion.button>
+            <motion.button 
+              className="auth-btn" 
+              style={{ flex: 1, margin: 0, background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+              onClick={() => {
+                setSelectedWallpaper(WALLPAPERS[0]);
+                applyWallpaper(WALLPAPERS[0]);
+              }}
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }}
+            >
+              Reset
+            </motion.button>
           </div>
         </section>
 
@@ -142,17 +275,101 @@ export default function SettingsPage() {
           <form className="profile-form" onSubmit={handleChangePassword}>
             {passMsg && <div className="profile-success">{passMsg}</div>}
             {passErr && <div className="profile-error">{passErr}</div>}
+            
             <div className="form-group">
               <label>Current Password</label>
-              <input type="password" value={oldPass} onChange={(e) => setOldPass(e.target.value)} placeholder="••••••••" />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input 
+                  type={showOldPass ? 'text' : 'password'} 
+                  value={oldPass} 
+                  onChange={(e) => setOldPass(e.target.value)} 
+                  placeholder="••••••••" 
+                  style={{ width: '100%', paddingRight: '44px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPass(!showOldPass)}
+                  style={{
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: showOldPass ? '#C084FC' : '#6B7280', display: 'flex'
+                  }}
+                >
+                  {showOldPass ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+
             <div className="form-group">
               <label>New Password</label>
-              <input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="••••••••" />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input 
+                  type={showNewPass ? 'text' : 'password'} 
+                  value={newPass} 
+                  onChange={(e) => setNewPass(e.target.value)} 
+                  placeholder="••••••••" 
+                  style={{ width: '100%', paddingRight: '44px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  style={{
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: showNewPass ? '#C084FC' : '#6B7280', display: 'flex'
+                  }}
+                >
+                  {showNewPass ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+
             <div className="form-group">
               <label>Confirm New Password</label>
-              <input type="password" value={confPass} onChange={(e) => setConfPass(e.target.value)} placeholder="••••••••" />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input 
+                  type={showConfPass ? 'text' : 'password'} 
+                  value={confPass} 
+                  onChange={(e) => setConfPass(e.target.value)} 
+                  placeholder="••••••••" 
+                  style={{ width: '100%', paddingRight: '44px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfPass(!showConfPass)}
+                  style={{
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: showConfPass ? '#C084FC' : '#6B7280', display: 'flex'
+                  }}
+                >
+                  {showConfPass ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
             <motion.button className="auth-btn" type="submit" disabled={savingPass} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               {savingPass ? 'Changing…' : 'Change Password'}

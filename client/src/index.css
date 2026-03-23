@@ -3301,4 +3301,43 @@ body {
   border-radius: 8px;
   margin-bottom: 12px;
   border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .chat-layout {
+    flex-direction: column !important;
+  }
+
+  .sidebar {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    transform: translateX(0) !important;
+    background: var(--bg-primary);
+    transition: transform 0.3s ease !important;
+  }
+
+  .sidebar.hidden-mobile {
+    transform: translateX(-100%) !important;
+    pointer-events: none !important;
+  }
+
+  .chat-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 20 !important;
+    transform: translateX(100%) !important;
+    background: var(--bg-primary);
+    transition: transform 0.3s ease !important;
+  }
+
+  .chat-window.visible-mobile {
+    transform: translateX(0) !important;
+  }
 }

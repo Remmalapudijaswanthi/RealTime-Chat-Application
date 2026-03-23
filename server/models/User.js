@@ -67,8 +67,8 @@ const userSchema = new mongoose.Schema(
       readReceipts: { type: Boolean, default: true },
       notifications: { type: Boolean, default: true },
       theme: { type: String, default: 'dark-nebula' },
+      colorMode: { type: String, enum: ['light', 'dark'], default: 'dark' },
       appBackground: { type: String, default: '#0A0A0A' },
-      chatWallpaper: { type: String, default: 'default' },
       chatWallpaper: { type: String, default: 'default' },
       messageTemplates: { type: [String], default: [] },
       chatLockPin: { type: String, default: null }, // Hashed PIN

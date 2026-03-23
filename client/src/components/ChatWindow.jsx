@@ -735,12 +735,15 @@ export default function ChatWindow({
         animate={{ opacity: 1, y: 0 }}
         style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}
       >
-        <button className="back-btn" onClick={onBack}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+        {/* Mobile-only back button */}
+        {isMobile && (
+          <button className="back-btn mobile-only" onClick={onBack} style={{ marginRight: '10px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
         
         <div 
           className="chat-header-info-clickable" 
