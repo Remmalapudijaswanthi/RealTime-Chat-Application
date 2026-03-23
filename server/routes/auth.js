@@ -139,9 +139,10 @@ router.post('/send-otp',
   async (req, res) => {
     try {
       let { email, type } = req.body
-      const fs = require('fs');
-      const logMsg = `[${new Date().toISOString()}] Send OTP Request - Email: ${email}, Type: ${type}, Origin: ${req.headers['origin']}\n`;
-      fs.appendFileSync('C:\\Users\\remma\\server_debug.log', logMsg);
+      console.log('--- Send OTP Request ---');
+      console.log('Email:', email);
+      console.log('Type:', type);
+      console.log('Headers:', req.headers['origin']);
       
       // Validate
       if (!email) {
@@ -204,9 +205,6 @@ router.post('/send-otp',
       
     } catch (error) {
       console.error('send-otp error:', error);
-      const fs = require('fs');
-      const errorMsg = `[${new Date().toISOString()}] send-otp ERROR: ${error.message}, Code: ${error.code}\n`;
-      fs.appendFileSync('C:\\Users\\remma\\server_debug.log', errorMsg);
       
       let message = 'Failed to send OTP. Please try again.'
       
