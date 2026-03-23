@@ -135,6 +135,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 // POST /api/auth/send-otp
 router.post('/send-otp',
+  otpLimiter,
   async (req, res) => {
     try {
       let { email, type } = req.body
