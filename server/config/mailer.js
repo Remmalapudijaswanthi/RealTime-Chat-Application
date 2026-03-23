@@ -11,22 +11,6 @@ const transporter = nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-})
-
-transporter.verify((error) => {
-  if (error) {
-    console.error('SMTP connection failed:',
-      error.message)
-    console.error('SMTP_USER is',
-      process.env.SMTP_USER ? 'SET' : 'NOT SET')
-    console.error('SMTP_PASS is',
-      process.env.SMTP_PASS ? 'SET' : 'NOT SET')
-  } else {
-    console.log('SMTP ready to send emails ✓')
   }
 })
 
