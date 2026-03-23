@@ -139,10 +139,6 @@ router.post('/send-otp',
   async (req, res) => {
     try {
       let { email, type } = req.body
-      console.log('--- Send OTP Request ---');
-      console.log('Email:', email);
-      console.log('Type:', type);
-      console.log('Headers:', req.headers['origin']);
       
       // Validate
       if (!email) {
@@ -204,24 +200,25 @@ router.post('/send-otp',
       })
       
     } catch (error) {
-      console.error('send-otp error:', error);
+      console.error('send-otp error:', 
+        error.message)
       
       let message = 'Failed to send OTP. Please try again.'
       
       if (error.code === 'EAUTH') {
         message = 'Email service error. Contact support.'
-        console.error('SMTP AUTH FAILED - Check SMTP_USER and SMTP_PASS');
+        console.error('SMTP AUTH FAILED -',
+          'Check SMTP_USER and SMTP_PASS in Render')
       }
       
-      if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      if (error.code === 'ECONNECTION' || 
+          error.code === 'ETIMEDOUT') {
         message = 'Email server unavailable. Please try again in a moment.'
-        console.error('SMTP Connection error:', error.code);
       }
       
       return res.status(500).json({
         success: false,
-        message,
-        error: error.message
+        message
       })
     }
   }
