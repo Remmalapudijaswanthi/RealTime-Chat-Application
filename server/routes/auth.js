@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 const { sendOTP, verifyOTP } = require('../utils/otpHelper');
+const transporter = require('../config/mailer');
 
 const router = express.Router();
 
@@ -136,43 +137,58 @@ router.get('/me', authMiddleware, async (req, res) => {
 // --- OTP ROUTES ---
 
 // POST /api/auth/send-otp
-router.post('/send-otp', otpLimiter, async (req, res) => {
+router.post('/send-otp', async (req, res) => {
   try {
-    const { email, type } = req.body;
+    const { email, type } = req.body
     
     if (!email || !type) {
-      return res.status(400).json({ message: 'Email and type are required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Email and type are required'
+      })
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: 'Invalid email format' });
-    }
-
-    if (type === 'register') {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email already registered' });
-      }
-    } else if (type === 'login' || type === 'forgot-password') {
-      const existingUser = await User.findOne({ email });
-      if (!existingUser) {
-        return res.status(400).json({ message: 'No account with this email' });
-      }
-    }
-
-    await sendOTP(email, type);
     
-    res.json({ 
-      success: true, 
-      message: "OTP sent to your email" 
-    });
+    await sendOTP(email, type)
+    
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully'
+    })
+    
   } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({ message: 'Failed to send email. Try again.' });
+    console.error('send-otp route error:', 
+      error.message)
+      
+    return res.status(500).json({
+      success: false,
+      message: error.message || 
+        'Failed to send OTP. Please try again.'
+    })
   }
-});
+})
+
+router.get('/test-smtp', async (req, res) => {
+  try {
+    await transporter.verify()
+    res.json({
+      success: true,
+      message: 'SMTP is working correctly',
+      smtpUser: process.env.SMTP_USER || 'NOT SET',
+      smtpPass: process.env.SMTP_PASS 
+        ? 'SET ✓' : 'NOT SET ✗',
+      port: 465,
+      secure: true
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      smtpUser: process.env.SMTP_USER || 'NOT SET',
+      smtpPass: process.env.SMTP_PASS 
+        ? 'SET ✓' : 'NOT SET ✗'
+    })
+  }
+})
 
 // POST /api/auth/verify-register
 router.post('/verify-register', async (req, res) => {

@@ -108,7 +108,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       const endpoint = forgotStep === 1 ? '/api/auth/forgot-password/send' : '/api/auth/send-otp';
-      await axiosInstance.post(endpoint, { email, type });
+      await axiosInstance.post(endpoint, { email, type }, { timeout: 60000 });
       
       setTimer(600); // 10 minutes
       if (activeTab === 'register') setRegStep(2);

@@ -1,5 +1,5 @@
 module.exports = {
-  otpEmail: (otp, type) => {
+  getEmailTemplate: (otp, type) => {
     const titles = {
       register: 'Verify Your Email',
       login: 'Your Login Code',
@@ -11,9 +11,7 @@ module.exports = {
       'forgot-password': 'Enter this code to reset your password'
     }
     
-    return {
-      subject: `${otp} is your PingMe verification code`,
-      html: `
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -113,7 +111,7 @@ module.exports = {
                 will be invalidated.
               </p>
               
-            </td>
+              </td>
           </tr>
           
           <!-- BOTTOM -->
@@ -139,6 +137,5 @@ module.exports = {
 </body>
 </html>
       `
-    }
   }
 }

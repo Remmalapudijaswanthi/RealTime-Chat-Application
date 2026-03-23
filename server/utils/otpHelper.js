@@ -1,31 +1,53 @@
 const crypto = require('crypto')
 const OTP = require('../models/OTP')
 const transporter = require('../config/mailer')
-const { otpEmail } = require('./emailTemplates')
+const { getEmailTemplate } = require('./emailTemplates')
 
 const generateOTP = () => {
   return crypto.randomInt(100000, 999999).toString()
 }
 
 const sendOTP = async (email, type) => {
-  // Delete existing unverified OTPs of the same type for this email
-  await OTP.deleteMany({ email, type, verified: false })
-  
-  const otp = generateOTP()
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
-  
-  await OTP.create({ email, otp, type, expiresAt })
-  
-  const template = otpEmail(otp, type)
-  
-  await transporter.sendMail({
-    from: `"${process.env.FROM_NAME}" <${process.env.FROM_EMAIL}>`,
-    to: email,
-    subject: template.subject,
-    html: template.html
-  })
-  
-  return true
+  try {
+    // Delete any existing OTP for this email
+    await OTP.deleteMany({ email, type })
+    
+    // Generate new 6 digit OTP
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString()
+    
+    // Set expiry 10 minutes from now
+    const expiresAt = new Date(
+      Date.now() + 10 * 60 * 1000
+    )
+    
+    // Save OTP to database
+    await OTP.create({ 
+      email, 
+      otp, 
+      type, 
+      expiresAt 
+    })
+    
+    // Send email
+    await transporter.sendMail({
+      from: `"PingMe" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `${otp} is your PingMe verification code`,
+      html: getEmailTemplate(otp, type)
+    })
+    
+    console.log('OTP sent successfully to:', email)
+    return { success: true }
+    
+  } catch (error) {
+    console.error('sendOTP error:', error.message)
+    throw new Error(
+      'Failed to send OTP email. ' +
+      'Please try again.'
+    )
+  }
 }
 
 const verifyOTP = async (email, otp, type) => {
