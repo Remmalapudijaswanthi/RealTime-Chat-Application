@@ -3,7 +3,6 @@ const nodemailer = require('nodemailer')
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: {
@@ -11,39 +10,63 @@ const createTransporter = () => {
       pass: process.env.SMTP_PASS
     },
     tls: {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
     },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-    pool: false
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    pool: false,
+    logger: false,
+    debug: false
   })
 }
 
-const sendEmail = async (to, subject, html) => {
-  const transporter = createTransporter()
+const sendEmail = async (to, subject, html, retries = 2) => {
+  let lastError = null
   
-  try {
-    const info = await transporter.sendMail({
-      from: `"PingMe" <${process.env.SMTP_USER}>`,
-      to: to,
-      subject: subject,
-      html: html
-    })
-    console.log('Email sent successfully:', 
-      info.messageId)
-    transporter.close()
-    return { success: true }
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const transporter = createTransporter()
     
-  } catch (error) {
-    console.error('Email send error:', 
-      error.message)
-    console.error('Error code:', error.code)
-    console.error('Error response:', 
-      error.response)
-    transporter.close()
-    throw error
+    try {
+      console.log(`Email attempt ${attempt}/${retries} to ${to}`)
+      console.log('SMTP_USER:', process.env.SMTP_USER ? 'SET' : 'NOT SET')
+      console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'SET' : 'NOT SET')
+      
+      const info = await transporter.sendMail({
+        from: `"PingMe" <${process.env.SMTP_USER}>`,
+        to: to,
+        subject: subject,
+        html: html
+      })
+      console.log('Email sent successfully:', 
+        info.messageId)
+      transporter.close()
+      return { success: true }
+      
+    } catch (error) {
+      lastError = error
+      console.error(`Email attempt ${attempt} failed:`, 
+        error.message)
+      console.error('Error code:', error.code)
+      console.error('Error response:', 
+        error.response)
+      transporter.close()
+      
+      // If auth error, don't retry
+      if (error.code === 'EAUTH') {
+        throw error
+      }
+      
+      // Wait before retry
+      if (attempt < retries) {
+        console.log(`Waiting 2s before retry...`)
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    }
   }
+  
+  throw lastError
 }
 
 module.exports = { sendEmail }
