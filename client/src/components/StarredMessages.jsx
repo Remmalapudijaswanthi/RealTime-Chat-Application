@@ -59,7 +59,7 @@ export default function StarredMessages({ isOpen, onClose, onGoToMessage }) {
           height: '100%',
           position: 'absolute',
           right: 0,
-          background: '#0F172A',
+          background: 'var(--bg-secondary)',
           borderLeft: '1px solid rgba(255,255,255,0.1)',
           display: 'flex',
           flexDirection: 'column',
@@ -67,8 +67,8 @@ export default function StarredMessages({ isOpen, onClose, onGoToMessage }) {
         }}
       >
         <div className="starred-header" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: '24px' }}>←</button>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: 'white' }}>Starred Messages</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '24px' }}>←</button>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Starred Messages</h2>
           <span style={{ background: 'rgba(124,58,237,0.2)', color: '#C084FC', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
             {messages.length}
           </span>
@@ -80,9 +80,9 @@ export default function StarredMessages({ isOpen, onClose, onGoToMessage }) {
               <div className="spinner" />
             </div>
           ) : messages.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748B' }}>
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>⭐</div>
-              <h3 style={{ color: 'white' }}>No starred messages</h3>
+              <h3 style={{ color: 'var(--text-primary)' }}>No starred messages</h3>
               <p>Messages you star will appear here for quick access.</p>
             </div>
           ) : (
@@ -94,11 +94,11 @@ export default function StarredMessages({ isOpen, onClose, onGoToMessage }) {
                   onClick={() => onGoToMessage(msg.room._id, msg._id)}
                   whileHover={{ scale: 1.02 }}
                   style={{
-                    background: 'rgba(30, 41, 59, 0.5)',
+                    background: 'var(--bg-surface)',
                     borderRadius: '16px',
                     padding: '16px',
                     cursor: 'pointer',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    border: '1px solid var(--border)',
                     position: 'relative'
                   }}
                 >
@@ -107,7 +107,7 @@ export default function StarredMessages({ isOpen, onClose, onGoToMessage }) {
                     <span style={{ fontSize: '11px', color: '#64748B' }}>{formatMessageTime(msg.createdAt)}</span>
                   </div>
                   
-                  <div style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                  <div style={{ color: 'var(--text-primary)', fontSize: '14px', lineHeight: '1.5', wordBreak: 'break-word' }}>
                     {msg.type === 'text' ? msg.content : (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94A3B8', fontStyle: 'italic' }}>
                          📎 {msg.type.charAt(0).toUpperCase() + msg.type.slice(1)} Message

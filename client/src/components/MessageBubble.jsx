@@ -343,7 +343,7 @@ export default function MessageBubble({
             ? 'transparent'
             : isOwn 
               ? 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)' 
-              : 'var(--bg-secondary)',
+              : 'var(--received-bubble)',
           color: isOwn ? 'white' : 'var(--text-primary)',
           boxShadow: (message.type === 'text' && isEmojiOnly(message.content)) ? 'none' : '0 1px 2px rgba(0,0,0,0.1)',
           border: isOwn ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid var(--border)',
@@ -485,8 +485,8 @@ export default function MessageBubble({
                   top: contextPos.y < 350 ? 'calc(100% + 8px)' : 'auto',
                   [isOwn ? 'right' : 'left']: 0,
                   zIndex: 2000,
-                  background: '#1E1E2E',
-                  border: '1px solid #2A2A2A',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: '12px',
                   padding: '4px',
                   minWidth: '160px',

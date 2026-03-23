@@ -42,10 +42,20 @@ export default function Sidebar({
   }, []);
 
   const toggleTheme = () => {
-    const root = document.documentElement;
-    const isLight = root.classList.toggle('light-mode');
-    setIsLightMode(isLight);
-    localStorage.setItem('pingme-color-mode', isLight ? 'light' : 'dark');
+    const newMode = isLightMode ? 'dark' : 'light';
+    setIsLightMode(!isLightMode);
+    localStorage.setItem('pingme-color-mode', newMode);
+    
+    // Apply to document root AND body AND html
+    document.documentElement.classList.remove('light-mode', 'dark-mode');
+    document.body.classList.remove('light-mode', 'dark-mode');
+    
+    document.documentElement.classList.add(`${newMode}-mode`);
+    document.body.classList.add(`${newMode}-mode`);
+    
+    // Also set data attribute as backup
+    document.documentElement.setAttribute('data-theme', newMode);
+    
     window.dispatchEvent(new Event('themeChange'));
   };
 

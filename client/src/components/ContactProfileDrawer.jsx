@@ -66,7 +66,7 @@ export default function ContactProfileDrawer({ contact, isOpen, onClose }) {
               width: '100%',
               maxWidth: '400px',
               height: '100vh',
-              background: '#0D0D0D',
+              background: 'var(--bg-primary)',
               zIndex: 1001,
               boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
               display: 'flex',
@@ -86,7 +86,7 @@ export default function ContactProfileDrawer({ contact, isOpen, onClose }) {
                 <img 
                   src={contact.avatar} 
                   alt={contact.username} 
-                  style={{ width: '90px', height: '90px', borderRadius: '50%', border: '4px solid #0D0D0D', objectFit: 'cover' }}
+                  style={{ width: '90px', height: '90px', borderRadius: '50%', border: '4px solid var(--bg-primary)', objectFit: 'cover' }}
                 />
               </div>
             </div>
@@ -106,11 +106,11 @@ export default function ContactProfileDrawer({ contact, isOpen, onClose }) {
                         if (e.key === 'Escape') handleCancel();
                       }}
                       style={{
-                        background: '#1A1A1A',
-                        border: '1.5px solid #C084FC',
+                        background: 'var(--bg-surface)',
+                        border: '1.5px solid var(--accent)',
                         borderRadius: '8px',
                         padding: '6px 10px',
-                        color: '#F8FAFC',
+                        color: 'var(--text-primary)',
                         fontSize: '18px',
                         fontWeight: '600',
                         width: 'auto',
@@ -122,7 +122,7 @@ export default function ContactProfileDrawer({ contact, isOpen, onClose }) {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h2 style={{ fontSize: '22px', fontWeight: '700', margin: 0 }}>{currentNickname}</h2>
+                    <h2 style={{ fontSize: '22px', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>{currentNickname}</h2>
                     <button 
                       onClick={() => setIsEditing(true)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', fontSize: '14px' }}
@@ -147,8 +147,8 @@ export default function ContactProfileDrawer({ contact, isOpen, onClose }) {
               {/* Info Rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', color: '#6B7280', marginBottom: '4px', letterSpacing: '0.05em' }}>About</label>
-                  <p style={{ margin: 0, fontSize: '15px' }}>{contact.bio || 'No bio yet'}</p>
+                  <label style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px', letterSpacing: '0.05em' }}>About</label>
+                  <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)' }}>{contact.bio || 'No bio yet'}</p>
                 </div>
 
                 <div>

@@ -615,7 +615,7 @@ export default function ChatWindow({
 
   if (!currentRoom) {
     return (
-      <div className="chat-window welcome-screen">
+      <div className="chat-window welcome-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <motion.div
           className="welcome-logo-container"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -632,27 +632,27 @@ export default function ChatWindow({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <h1>PingMe</h1>
-          <p>The ultimate real-time messaging experience with style and speed.</p>
+          <h1 style={{ color: 'var(--text-primary)' }}>PingMe</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>The ultimate real-time messaging experience with style and speed.</p>
         </motion.div>
-
+ 
         <motion.div 
           className="feature-pills"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          <div className="feature-pill purple">
+          <div className="feature-pill purple" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>🔒</span> End-to-End Encrypted
           </div>
-          <div className="feature-pill blue">
+          <div className="feature-pill blue" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>⚡</span> Real-time Sync
           </div>
-          <div className="feature-pill green">
+          <div className="feature-pill green" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>🖼️</span> HD Media Support
           </div>
         </motion.div>
-
+ 
         <motion.div 
           className="welcome-arrow"
           initial={{ opacity: 0 }}
@@ -662,7 +662,7 @@ export default function ChatWindow({
           <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>
             Select a chat to start
           </div>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}>
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
           </svg>
@@ -727,9 +727,14 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="chat-window">
+    <div className="chat-window" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <motion.div className="chat-header" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div 
+        className="chat-header" 
+        initial={{ opacity: 0, y: -10 }} 
+        animate={{ opacity: 1, y: 0 }}
+        style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}
+      >
         <button className="back-btn" onClick={onBack}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
@@ -747,11 +752,11 @@ export default function ChatWindow({
             {isOnline && <span className="online-dot pulse" />}
           </div>
           <div className="chat-header-info">
-            <h3 className="chat-header-name">
+            <h3 className="chat-header-name" style={{ color: 'var(--text-primary)' }}>
               {roomName}
               {currentRoom.type === 'private' && <span style={{ marginLeft: '6px', fontSize: '14px', opacity: 0.5 }}>✏️</span>}
             </h3>
-            <span className="chat-header-status">
+            <span className="chat-header-status" style={{ color: 'var(--text-secondary)' }}>
               {currentRoom.type === 'group' ? (
                 `${memberCount} members`
               ) : isOnline ? (
@@ -785,8 +790,8 @@ export default function ChatWindow({
                   top: '100%',
                   right: 0,
                   marginTop: '8px',
-                  background: '#1A1A1A',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: '12px',
                   padding: '6px',
                   zIndex: 1000,
@@ -796,7 +801,7 @@ export default function ChatWindow({
               >
                 <button 
                   onClick={() => { setShowBackgroundPicker(true); setShowMoreActions(false); }}
-                  style={{ width: '100%', padding: '10px 12px', background: 'none', border: 'none', color: '#F8FAFC', fontSize: '13px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}
+                  style={{ width: '100%', padding: '10px 12px', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '13px', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}
                   className="more-action-hover"
                 >
                   🎨 Change Wallpaper
@@ -1117,11 +1122,11 @@ export default function ChatWindow({
               </svg>
             </motion.button>
             <button
-              className="template-btn"
-              onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowAttachMenu(false); }}
-              title="Emoji"
-              style={{ fontSize: '22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', color: showEmojiPicker ? 'var(--accent)' : 'var(--text-muted)' }}
-            >
+               className="template-btn"
+               onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowAttachMenu(false); }}
+               title="Emoji"
+               style={{ fontSize: '22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', color: showEmojiPicker ? 'var(--accent)' : 'var(--text-muted)' }}
+             >
               😊
             </button>
             <button className="template-btn" onClick={() => setShowTemplates(!showTemplates)} title="Quick Replies">
@@ -1161,6 +1166,7 @@ export default function ChatWindow({
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 onFocus={() => setShowEmojiPicker(false)}
+                style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                 onInput={(e) => {
                   e.target.style.height = 'auto';
                   e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
@@ -1329,7 +1335,7 @@ export default function ChatWindow({
               style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '16px' }}
             >
               <h3>File Preview</h3>
-              <div style={{ background: '#000', borderRadius: '12px', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ background: 'var(--bg-primary)', borderRadius: '12px', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
                 {previewFile.type === 'image' ? (
                   <img src={previewFile.url} alt="preview" style={{ maxHeight: '300px', maxWidth: '100%', objectFit: 'contain' }} />
                 ) : (
@@ -1341,7 +1347,7 @@ export default function ChatWindow({
                 placeholder="Add a caption..."
                 value={fileCaption}
                 onChange={e => setFileCaption(e.target.value)}
-                style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', padding: '10px 14px', borderRadius: '8px', color: '#FFF' }}
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: '8px', color: 'var(--text-primary)' }}
               />
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button className="cancel-edit-btn" onClick={() => setPreviewFile(null)}>Cancel</button>

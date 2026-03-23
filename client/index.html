@@ -9,24 +9,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <title>PingMe</title>
     <script>
-      try {
-        const dm = localStorage.getItem('pingme-color-mode');
-        if (dm === '"light"' || dm === 'light') document.documentElement.classList.add('light-mode');
-        
-        const root = document.documentElement;
-        const bg = localStorage.getItem('pingme-app-bg');
-        if (bg) {
-          root.style.setProperty('--bg-primary', JSON.parse(bg).bg);
-        }
-        
-        const wp = localStorage.getItem('pingme-chat-wallpaper');
-        if (wp) {
-          const parsed = JSON.parse(wp);
-          root.style.setProperty('--chat-bg-color', parsed.bgColor || parsed.bg || 'transparent');
-          root.style.setProperty('--chat-bg-image', parsed.bgImage || 'none');
-          root.style.setProperty('--chat-bg-size', parsed.bgSize || 'auto');
-        }
-      } catch (e) {}
+      (function() {
+        const mode = localStorage.getItem(
+          'pingme-color-mode'
+        ) || 'dark';
+        const cleanMode = mode.replace(/"/g, ''); 
+        document.documentElement.classList.add(
+          cleanMode + '-mode'
+        );
+        document.body && document.body.classList.add(
+          cleanMode + '-mode'
+        );
+        document.documentElement.setAttribute('data-theme', cleanMode);
+      })()
     </script>
   </head>
   <body>

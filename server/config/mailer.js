@@ -14,5 +14,18 @@ const transporter = nodemailer.createTransport({
   }
 })
 
+transporter.verify((error) => {
+  if (error) {
+    console.error('SMTP connection failed:',
+      error.message)
+    console.error('SMTP_USER is',
+      process.env.SMTP_USER ? 'SET' : 'NOT SET')
+    console.error('SMTP_PASS is',
+      process.env.SMTP_PASS ? 'SET' : 'NOT SET')
+  } else {
+    console.log('SMTP ready to send emails ✓')
+  }
+})
+
 module.exports = transporter
 
