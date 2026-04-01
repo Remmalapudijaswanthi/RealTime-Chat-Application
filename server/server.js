@@ -51,7 +51,12 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:3000', 
+      process.env.CLIENT_URL,
+      /\.vercel\.app$/
+    ].filter(Boolean),
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   },
@@ -164,7 +169,7 @@ const startServer = async () => {
     }
   });
 
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };
