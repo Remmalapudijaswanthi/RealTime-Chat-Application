@@ -46,6 +46,7 @@ const ChatRoom = require('./models/ChatRoom');
 
 // Initialize Express app
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // Initialize Socket.io
