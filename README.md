@@ -75,7 +75,6 @@ To get a local copy up and running, follow these simple steps.
    ```env
    PORT=5000
    MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
    SMTP_USER=your_email@gmail.com
