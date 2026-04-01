@@ -30,14 +30,6 @@ export default function Logo({ size = 36, animate = false, showText = false }) {
           fill="url(#grad2)"
           opacity="0.85"
         />
-        {/* Small ping dot in center */}
-        <circle
-          cx="20"
-          cy="20"
-          r="3"
-          fill="white"
-          opacity="0.9"
-        />
         <defs>
           <linearGradient
             id="grad1"

@@ -1025,7 +1025,7 @@ body {
 
 .search-input {
   width: 100%;
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 10px 40px 10px 42px;
@@ -1033,7 +1033,7 @@ body {
   color: var(--text-primary);
   font-family: inherit;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background 0.3s ease;
 }
 
 .search-input::placeholder {
@@ -1042,7 +1042,8 @@ body {
 
 .search-input:focus {
   border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+  background: var(--bg-surface);
 }
 
 .search-input::placeholder {
@@ -1186,18 +1187,17 @@ body {
   gap: 12px;
   padding: 8px 20px;
   cursor: pointer;
-  transition: background var(--transition-fast);
-  border-left: 3px solid transparent;
+  transition: background var(--transition-fast), border-color 0.2s ease;
+  border-left: 4px solid transparent;
 }
 
 .room-item.active {
-  background: var(--active-chat);
+  background: rgba(124, 58, 237, 0.15);
   border-left-color: var(--accent);
-  border-left-width: 3px;
 }
 
 .room-item:hover:not(.active) {
-  background: var(--chat-item-hover);
+  background: rgba(124, 58, 237, 0.08);
 }
 
 .room-avatar-wrapper {
@@ -1227,7 +1227,7 @@ body {
 }
 
 .room-name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
   color: var(--text-primary);
   white-space: nowrap;
@@ -1250,7 +1250,8 @@ body {
 
 .room-last-message {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  opacity: 0.95;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1268,18 +1269,19 @@ body {
 }
 
 .unread-badge {
-  background: #00a884;
-  color: #111b21;
-  font-size: 0.7rem;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.75rem;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 0 6px;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
 }
 
 /* Online Dot */
@@ -1306,7 +1308,7 @@ body {
 /* Sidebar Footer */
 .sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
 }
 
 .new-group-btn {
@@ -1330,6 +1332,46 @@ body {
 .new-group-btn:hover {
   background: rgba(124, 58, 237, 0.2);
   border-color: var(--accent-purple-light);
+}
+
+.profile-card-settings {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-card-settings:hover {
+  transform: rotate(90deg) scale(1.15);
+  color: var(--accent);
+}
+
+/* Feature Badge Shimmer (Welcome Screen) */
+.feature-badge-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-badge-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.15), transparent);
+  animation: badge-shimmer 3s infinite;
+  transform: skewX(-20deg);
+}
+
+@keyframes badge-shimmer {
+  0% { left: -150%; }
+  100% { left: 150%; }
 }
 
 /* ============================== */

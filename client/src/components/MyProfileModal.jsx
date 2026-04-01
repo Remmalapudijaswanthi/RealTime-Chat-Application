@@ -439,14 +439,128 @@ export default function MyProfileModal({ isOpen, onClose }) {
           >
             <div style={{ height: '140px', background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)', position: 'relative', flexShrink: 0 }}>
               <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', zIndex: 10 }}>✕</button>
-              <div style={{ position: 'absolute', bottom: '-40px', left: '50%', transform: 'translateX(-50%)' }}>
-                <div className="avatar-edit-wrapper" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
-                  <img src={user.avatar} alt={user.username} style={{ width: '100px', height: '100px', borderRadius: '50%', border: '4px solid var(--bg-secondary)', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} className="avatar-hover">
-                    <span style={{ fontSize: '24px' }}>📷</span>
+              <div style={{ position: 'absolute', bottom: '-40px', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div
+                  style={{
+                    position: 'relative',
+                    width: 90,
+                    height: 90,
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    border: '4px solid var(--bg-secondary)'
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {/* Profile photo or initials */}
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #7C3AED, #C084FC)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 32,
+                      fontWeight: 700,
+                      color: 'white'
+                    }}>
+                      {user.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+
+                  {/* Camera overlay — ALWAYS visible */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: '#C084FC',
+                    border: '2px solid var(--bg-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                  }}>
+                    <svg
+                      width="14" height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    >
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                  </div>
+
+                  {/* Hover overlay for desktop */}
+                  <div
+                    className="photo-hover-overlay"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '50%',
+                      background: 'rgba(0,0,0,0)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'background 0.2s',
+                      gap: 4
+                    }}
+                  >
+                    <span style={{
+                      color: 'white',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      opacity: 0,
+                      transition: 'opacity 0.2s'
+                    }}
+                    className="photo-change-text">
+                      Change
+                    </span>
                   </div>
                 </div>
-                <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleAvatarChange} />
+
+                <p style={{
+                  fontSize: 11,
+                  color: 'var(--accent)',
+                  textAlign: 'center',
+                  marginTop: 6,
+                  marginBottom: 0,
+                  cursor: 'pointer'
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                >
+                  Tap to change photo
+                </p>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarChange}
+                />
+                <style dangerouslySetInnerHTML={{__html: `
+                  .photo-hover-overlay:hover { background: rgba(0,0,0,0.5) !important; }
+                  .photo-hover-overlay:hover .photo-change-text { opacity: 1 !important; }
+                `}} />
               </div>
             </div>
 

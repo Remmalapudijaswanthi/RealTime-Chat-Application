@@ -73,12 +73,26 @@ export default function RoomList({
                         </span>
                       ) : (
                         <>
-                          {room.lastMessage?.sender?._id === user?._id && 'You: '}
-                          {room.lastMessage?.type === 'image' && '📷 Image'}
-                          {room.lastMessage?.type === 'video' && '🎥 Video'}
-                          {room.lastMessage?.type === 'document' && '📄 Document'}
-                          {room.lastMessage?.type === 'voice' && '🎤 Voice message'}
-                          {room.lastMessage?.type === 'text' && (room.lastMessage?.content || '')}
+                          {room.lastMessage?.sender?._id === user?._id && (
+                            <span style={{ marginRight: '4px', color: (room.lastMessage.readBy?.length > 0 || room.lastMessage.read) ? '#38BDF8' : '#94A3B8', display: 'inline-flex', alignItems: 'center' }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                {(room.lastMessage.readBy?.length > 0 || room.lastMessage.read) ? (
+                                  <>
+                                    <path d="M18 6L7 17l-5-5"/>
+                                    <path d="M22 10l-5.5 5.5-1.5-1.5"/>
+                                  </>
+                                ) : (
+                                  <path d="M20 6L9 17l-5-5"/>
+                                )}
+                              </svg>
+                            </span>
+                          )}
+                          {room.lastMessage?.sender?._id === user?._id && <span style={{ marginRight: '2px' }}>You:</span>}
+                          {room.lastMessage?.type === 'image' && ' 📷 Image'}
+                          {room.lastMessage?.type === 'video' && ' 🎥 Video'}
+                          {room.lastMessage?.type === 'document' && ' 📄 Document'}
+                          {room.lastMessage?.type === 'voice' && ' 🎤 Voice message'}
+                          {room.lastMessage?.type === 'text' && (room.lastMessage?.content ? ` ${room.lastMessage.content}` : '')}
                         </>
                       )}
                     </span>

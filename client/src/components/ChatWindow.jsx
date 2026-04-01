@@ -59,6 +59,7 @@ export default function ChatWindow({
   const [uploadProgress, setUploadProgress] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const [fileCaption, setFileCaption] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [showContactDrawer, setShowContactDrawer] = useState(false);
@@ -247,18 +248,24 @@ export default function ChatWindow({
   };
 
   const handleSend = () => {
+    if (isSending) return;
     if (!inputValue.trim()) return;
 
-    if (editingMessage) {
-      onEditMessage(editingMessage._id, inputValue.trim());
-      setEditingMessage(null);
-    } else {
-      onSendMessage(inputValue.trim());
-    }
+    setIsSending(true);
+    try {
+      if (editingMessage) {
+        onEditMessage(editingMessage._id, inputValue.trim());
+        setEditingMessage(null);
+      } else {
+        onSendMessage(inputValue.trim());
+      }
 
-    setInputValue('');
-    onStopTyping();
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      setInputValue('');
+      onStopTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -493,13 +500,6 @@ export default function ChatWindow({
         `/api/chats/room/${currentRoom._id}/messages`,
         { content, type, caption }
       );
-      
-      if (response.data.success) {
-        // Message will come back via socket if not using optimistic UI
-        // But we add it here if the parent doesn't handle socket 'receive_message' for us
-        // In this app, onSendMessage is usually passed in. Let's use it for consistency.
-        onSendMessage(content, { type, caption, fileName: caption.split('|')[0] });
-      }
     } catch (err) {
       console.error('Send media error:', err);
       alert('Failed to send file');
@@ -617,7 +617,7 @@ export default function ChatWindow({
 
   if (!currentRoom) {
     return (
-      <div className="chat-window welcome-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <div className="chat-window welcome-screen" style={{ background: 'radial-gradient(circle at center, var(--bg-surface) 0%, var(--bg-primary) 100%)', color: 'var(--text-primary)' }}>
         <motion.div
           className="welcome-logo-container"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -644,13 +644,13 @@ export default function ChatWindow({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          <div className="feature-pill purple" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+          <div className="feature-pill purple feature-badge-shimmer" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>🔒</span> End-to-End Encrypted
           </div>
-          <div className="feature-pill blue" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+          <div className="feature-pill blue feature-badge-shimmer" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>⚡</span> Real-time Sync
           </div>
-          <div className="feature-pill green" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+          <div className="feature-pill green feature-badge-shimmer" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
             <span>🖼️</span> HD Media Support
           </div>
         </motion.div>
@@ -1202,7 +1202,7 @@ export default function ChatWindow({
                   key="send"
                   className="send-btn"
                   onClick={handleSend}
-                  disabled={uploading}
+                  disabled={uploading || isSending}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}

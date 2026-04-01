@@ -271,26 +271,35 @@ export default function Sidebar({
         {loadingRooms ? (
           <ChatListSkeleton />
         ) : (
-          <div onContextMenu={(e) => {
-            // Find the room from the click target or delegate
-            const roomEl = e.target.closest('.room-item');
-            if (roomEl) {
-              // This is a bit hacky since RoomList doesn't expose individuals
-              // In a real app, RoomList would take onContextMenu prop
-            }
-          }}>
-            <RoomList
-              rooms={filteredRooms}
-              currentRoom={currentRoom}
-              onSelectRoom={onSelectRoom}
-              getRoomName={getRoomName}
-              getRoomAvatar={getRoomAvatar}
-              isRoomOnline={isRoomOnline}
-              unreadCounts={unreadCounts}
-              typingUsers={typingUsers}
-              onContextMenu={handleContextMenu}
-            />
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+              onContextMenu={(e) => {
+                // Find the room from the click target or delegate
+                const roomEl = e.target.closest('.room-item');
+                if (roomEl) {
+                  // This is a bit hacky since RoomList doesn't expose individuals
+                  // In a real app, RoomList would take onContextMenu prop
+                }
+              }}
+            >
+              <RoomList
+                rooms={filteredRooms}
+                currentRoom={currentRoom}
+                onSelectRoom={onSelectRoom}
+                getRoomName={getRoomName}
+                getRoomAvatar={getRoomAvatar}
+                isRoomOnline={isRoomOnline}
+                unreadCounts={unreadCounts}
+                typingUsers={typingUsers}
+                onContextMenu={handleContextMenu}
+              />
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
 

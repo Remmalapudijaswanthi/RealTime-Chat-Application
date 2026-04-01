@@ -1,32 +1,31 @@
 export function formatTime(dateString) {
+  if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  
+  // Reset time to start of day for accurate day-level comparison
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  const diffDays = Math.floor((startOfToday - startOfDate) / 86400000);
 
-  // Less than 1 minute
-  if (diffMins < 1) return 'Just now';
-
-  // Less than 1 hour
-  if (diffMins < 60) return `${diffMins}m ago`;
-
-  // Today — show time
-  if (diffHours < 24 && date.getDate() === now.getDate()) {
+  // Today
+  if (diffDays === 0) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   // Yesterday
-  if (diffDays === 1) return 'Yesterday';
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
 
-  // Within a week
-  if (diffDays < 7) {
+  // Within the last 6 days (shows as weekday like 'Mon', 'Tue')
+  if (diffDays > 1 && diffDays < 7) {
     return date.toLocaleDateString([], { weekday: 'short' });
   }
 
   // Older
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 }
 
 export function formatMessageTime(dateString) {

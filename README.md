@@ -1,151 +1,122 @@
-# ChatFlow — Real-Time Chat Application
+# PingMe - Secure Real-Time Chat Application
 
-A full-stack real-time chat application built with the MERN stack and Socket.io.
+![PingMe Cover](https://ui-avatars.com/api/?name=Ping+Me&background=7C3AED&color=fff&bold=true&size=400)
 
-![MERN](https://img.shields.io/badge/Stack-MERN-green) ![Socket.io](https://img.shields.io/badge/Realtime-Socket.io-blue)
+**PingMe** is a premium, real-time messaging application designed with modern aesthetics, speed, and privacy in mind. Built on the MERN stack with highly optimized Socket.io communication, it provides a seamless chat experience identical to native apps.
 
-## Features
+## 🌟 Key Features
 
-- 🔐 JWT Authentication (Register/Login)
-- 💬 Real-time messaging with Socket.io
-- 👥 Private & group chats
-- ⌨️ Typing indicators
-- 🟢 Online/offline status
-- ✅ Read receipts (single/double tick)
-- ✏️ Edit & delete messages
-- 🎨 Modern dark UI with animations (Framer Motion)
-- 📧 SMTP Email OTP Verification (Register/Login)
-- 📱 Responsive design
+### 💬 Messaging & Real-Time Sync
+* **Instant Delivery**: Messages are sent, delivered, and marked with live ticks (✓ / ✓✓) instantaneously via Socket.io.
+* **Typing Indicators**: Live "User is typing..." indicators keep conversations alive.
+* **Unread Badges**: Real-time unread conversation badges tracking active chats.
 
-## Tech Stack
+### 🖼️ Rich Media & Attachments 
+* **HD Photo & Video Sharing**: Upload images, compressed on the client-side for ultra-fast transfers.
+* **Voice Recording**: Integrated microphone API to record, review, and send voice notes inline.
+* **Document Handling**: Send PDFs, code, and documents up to 10MB seamlessly.
 
-| Layer    | Technology                              |
-| -------- | --------------------------------------- |
-| Frontend | React 18, Vite, React Router, Axios     |
-| Backend  | Node.js, Express                        |
-| Database | MongoDB, Mongoose                       |
-| Realtime | Socket.io                               |
-| Auth     | JWT, bcryptjs                           |
-| UI       | Framer Motion, Inter font, custom CSS   |
+### 🔒 Privacy First
+* **Chat Locks**: Hide and encrypt specific private chats behind a custom PIN.
+* **End-to-End Style Protection**: Focus on secure data handling, with passwords salted via bcrypt and auth handled through secure JWTs.
 
-## Prerequisites
+### 🎨 State-of-the-Art UX
+* **Custom Themes**: Togglable Dark/Light mode and fluid CSS variables injected globally.
+* **Custom Chat Wallpapers**: Upload your own backgrounds or choose from curated PingMe themes (Midnight, Ocean, Forest).
+* **Framer Motion Transitions**: Smooth cross-fades when changing contexts, tabs, and interacting with core UI modals.
+* **Responsive Design**: Full desktop experience combined with a highly mobile-optimized UI.
 
-- **Node.js** v18+
-- **MongoDB** (local or [Atlas](https://www.mongodb.com/atlas))
+---
 
-## Setup
+## 🛠️ Technology Stack
 
-### 1. Clone & Install
+| Layer | Technologies Used |
+|-------|-------------------|
+| **Frontend** | React (Vite), Tailwind CSS concepts via Vanilla CSS, Framer Motion, Axios |
+| **Backend** | Node.js, Express.js |
+| **Real-Time** | Socket.io (WebSocket) |
+| **Database** | MongoDB (Mongoose) |
+| **Auth & Security**| JSON Web Tokens (JWT), Bcrypt.js, Nodemailer (OTP Verification) |
+| **Media Host** | Render/Cloudinary integration support |
 
-```bash
-# Install server dependencies
-cd server
-npm install
+---
 
-# Install client dependencies
-cd ../client
-npm install
-```
+## 🚀 Getting Started
 
-### 2. Configure Environment
+To get a local copy up and running, follow these simple steps.
 
-**Server** (`server/.env`):
-```env
-MONGO_URI=mongodb://localhost:27017/chatflow
-JWT_SECRET=your_secret_key_here
-PORT=5000
-```
+### Prerequisites
+* [Node.js](https://nodejs.org/en) (v18+)
+* [MongoDB](https://www.mongodb.com/) (Local or Atlas Atlas)
+* [Git](https://git-scm.com/)
 
-**Client** (`client/.env`):
-```env
-VITE_API_URL=http://localhost:5000
-```
+### Installation
 
-## Email Setup (Gmail SMTP)
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Remmalapudijaswanthi/RealTime-Chat-Application.git
+   cd RealTime-Chat-Application
+   ```
 
-1. Create a Gmail account for PingMe
-2. Go to [myaccount.google.com/security](https://myaccount.google.com/security)
-3. Enable **2-Step Verification**
-4. Search for "**App Passwords**"
-5. Generate a password for "**PingMe**"
-6. Copy the 16-digit password to `SMTP_PASS` in `.env`
+2. **Backend Setup**
+   ```bash
+   cd server
+   npm install
+   ```
 
-> [!NOTE]
-> Never commit your `.env` file to GitHub.
+3. **Frontend Setup**
+   ```bash
+   cd ../client
+   npm install
+   ```
 
-### 3. Run
+4. **Environment Variables Config**
+   Create a `.env` file in the `server` directory and add the following:
+   ```env
+   PORT=5000
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret_key
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_app_specific_password
+   CLIENT_URL=http://localhost:5173
+   ```
 
-```bash
-# Terminal 1 — Start server
-cd server
-npm run dev
+5. **Start the Application**
 
-# Terminal 2 — Start client
-cd client
-npm run dev
-```
+   *Terminal 1 (Server):*
+   ```bash
+   cd server
+   npm run dev
+   ```
 
-- **Client**: http://localhost:3000
-- **Server**: http://localhost:5000
+   *Terminal 2 (Client):*
+   ```bash
+   cd client
+   npm run dev
+   ```
 
-## Project Structure
+6. **Open in Browser**
+   Access `http://localhost:5173` to view the application locally.
 
-```
-├── server/
-│   ├── models/          # Mongoose schemas
-│   ├── routes/          # Express API routes
-│   ├── middleware/       # JWT auth middleware
-│   ├── socket/          # Socket.io event handler
-│   ├── server.js        # Entry point
-│   └── .env
-│
-├── client/
-│   └── src/
-│       ├── components/  # Sidebar, ChatWindow, MessageBubble, etc.
-│       ├── context/     # AuthContext, SocketContext
-│       ├── hooks/       # useChat, useSocket
-│       ├── pages/       # Login, Register, Chat
-│       ├── utils/       # Axios instance, time helpers
-│       ├── App.jsx      # Router & layout
-│       └── index.css    # Design system
-│
-└── README.md
-```
+---
 
-## API Endpoints
+## 🎨 Design Philosophy
+The PingMe interface is heavily customized with a dedicated `index.css` orchestrating global CSS variables. The goal was to avoid bootstrap-clone interfaces and provide a truly native-feeling app featuring:
+* Custom pulse animations
+* Sticky blur-backdrop filter navigations
+* Dedicated UI skeletons for perceived performance
 
-| Method | Endpoint                          | Description              |
-| ------ | --------------------------------- | ------------------------ |
-| POST   | `/api/auth/register`              | Register new user        |
-| POST   | `/api/auth/login`                 | Login                    |
-| GET    | `/api/auth/me`                    | Get current user         |
-| GET    | `/api/users/search?q=`            | Search users             |
-| GET    | `/api/users/:id`                  | Get user profile         |
-| PATCH  | `/api/users/status`               | Update status            |
-| POST   | `/api/chats/room`                 | Create/get private room  |
-| POST   | `/api/chats/group`                | Create group room        |
-| GET    | `/api/chats/rooms`                | List user's rooms        |
-| GET    | `/api/chats/room/:id/messages`    | Get paginated messages   |
-| PATCH  | `/api/chats/message/:id`          | Edit message             |
-| POST   | `/api/auth/send-otp`              | Send verification code   |
-| POST   | `/api/auth/verify-register`       | Register with OTP        |
-| POST   | `/api/auth/verify-login`          | Login with OTP           |
-| POST   | `/api/auth/forgot-password/send`  | Request password reset   |
-| POST   | `/api/auth/forgot-password/reset` | Reset password with OTP  |
-| DELETE | `/api/chats/message/:id`          | Delete message           |
+## 🤝 Contributing
+Contributions, issues, and feature requests are welcome!
 
-## Socket.io Events
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-| Event              | Direction      | Description             |
-| ------------------ | -------------- | ----------------------- |
-| `join_room`        | Client → Server | Join a chat room        |
-| `send_message`     | Client → Server | Send a message          |
-| `typing`           | Client → Server | Start typing            |
-| `stop_typing`      | Client → Server | Stop typing             |
-| `mark_read`        | Client → Server | Mark messages as read   |
-| `receive_message`  | Server → Client | New message received    |
-| `user_typing`      | Server → Client | User is typing          |
-| `user_stop_typing` | Server → Client | User stopped typing     |
-| `message_read`     | Server → Client | Messages marked read    |
-| `user_status_change` | Server → Client | Online/offline change |
-| `new_room`         | Server → Client | New room notification   |
+---
+
+*For support or any queries, please open an issue in the repository.*

@@ -11,12 +11,28 @@ const applyWallpaper = async (
   saveWallpaper(wallpaperObj)
 
   // 2. Apply to DOM immediately
-  const applied = applyWallpaperToDOM(wallpaperObj)
+  const applyParams = () => {
+    const el = document.getElementById('chat-window-messages') || document.querySelector('.chat-window');
+    if (!el) return false;
+    
+    if (wallpaperObj.type === 'custom-image') {
+      el.style.backgroundImage = `url(${wallpaperObj.value})`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.backgroundColor = '';
+    } else {
+      applyWallpaperToDOM(wallpaperObj);
+    }
+    return true;
+  };
+
+  const applied = applyParams();
   if (!applied) {
     // DOM element not ready yet
     // Try again after short delay
     setTimeout(() => {
-      applyWallpaperToDOM(wallpaperObj)
+      applyParams();
     }, 100)
   }
 

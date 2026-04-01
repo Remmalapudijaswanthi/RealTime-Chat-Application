@@ -292,7 +292,14 @@ export function useChat() {
 
     const handleReceiveMessage = (message) => {
       if (currentRoom && message.room === currentRoom._id) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          const alreadyExists = prev.some((m) => m._id === message._id);
+          if (alreadyExists) {
+            console.log('Duplicate message ignored:', message._id);
+            return prev;
+          }
+          return [...prev, message];
+        });
         socket.emit('mark_read', { roomId: currentRoom._id });
       } else {
         setUnreadCounts((prev) => ({
