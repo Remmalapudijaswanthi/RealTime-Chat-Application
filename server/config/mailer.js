@@ -1,10 +1,9 @@
-const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 
 /**
- * Sends an email using Gmail API (OAuth2)
- * This method is highly reliable on platforms like Render/Railway 
- * because it uses Port 443 (HTTPS) instead of blocked SMTP ports.
+ * Sends an email using Gmail REST API (HTTP Port 443)
+ * This is the MOST reliable method for Render/Railway because it 
+ * bypasses SMTP ports (465/587) which are often blocked.
  */
 const sendEmail = async (to, subject, html) => {
   try {
@@ -19,42 +18,42 @@ const sendEmail = async (to, subject, html) => {
       refresh_token: process.env.REFRESH_TOKEN
     });
 
-    // Generate accurate access token
-    const accessToken = await new Promise((resolve, reject) => {
-      oauth2Client.getAccessToken((err, token) => {
-        if (err) {
-          console.error("Failed to create access token :(", err);
-          reject(err);
-        }
-        resolve(token);
-      });
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+    // Create the RFC 2822 message
+    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+    const messageParts = [
+      `From: "PingMe" <${process.env.GMAIL_USER}>`,
+      `To: ${to}`,
+      `Content-Type: text/html; charset=utf-8`,
+      `MIME-Version: 1.0`,
+      `Subject: ${utf8Subject}`,
+      '',
+      html,
+    ];
+    const message = messageParts.join('\n');
+
+    // The body needs to be base64url encoded.
+    const encodedMessage = Buffer.from(message)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+      },
     });
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: process.env.GMAIL_USER,
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        refreshToken: process.env.REFRESH_TOKEN,
-        accessToken: accessToken
-      }
-    });
-
-    const mailOptions = {
-      from: `PingMe <${process.env.GMAIL_USER}>`,
-      to: to,
-      subject: subject,
-      html: html,
-      text: html.replace(/<[^>]*>?/gm, '') // Simple fallback for text-only clients
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully using Gmail API");
-    return result;
+    console.log("Email sent successfully using Gmail REST API! ✅");
+    return res.data;
   } catch (error) {
-    console.error('Email Error:', error.message);
+    console.error('Gmail API Error:', error.message);
+    if (error.response && error.response.data) {
+      console.error('Google Response:', JSON.stringify(error.response.data, null, 2));
+    }
     throw error;
   }
 };
