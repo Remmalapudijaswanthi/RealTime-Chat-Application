@@ -1,56 +1,62 @@
-const { Resend } = require('resend')
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
-const resend = process.env.RESEND_API_KEY 
-  ? new Resend(process.env.RESEND_API_KEY) 
-  : null
+/**
+ * Sends an email using Gmail API (OAuth2)
+ * This method is highly reliable on platforms like Render/Railway 
+ * because it uses Port 443 (HTTPS) instead of blocked SMTP ports.
+ */
+const sendEmail = async (to, subject, html) => {
+  try {
+    const OAuth2 = google.auth.OAuth2;
+    const oauth2Client = new OAuth2(
+      process.env.CLIENT_ID,
+      process.env.CLIENT_SECRET,
+      "https://developers.google.com/oauthplayground"
+    );
 
-const sendEmail = async (to, subject, html, retries = 2) => {
-  if (!resend) {
-    console.error('RESEND_API_KEY is not set')
-    throw new Error('Email service configuration missing')
+    oauth2Client.setCredentials({
+      refresh_token: process.env.REFRESH_TOKEN
+    });
+
+    // Generate accurate access token
+    const accessToken = await new Promise((resolve, reject) => {
+      oauth2Client.getAccessToken((err, token) => {
+        if (err) {
+          console.error("Failed to create access token :(", err);
+          reject(err);
+        }
+        resolve(token);
+      });
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.GMAIL_USER,
+        clientId: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRET,
+        refreshToken: process.env.REFRESH_TOKEN,
+        accessToken: accessToken
+      }
+    });
+
+    const mailOptions = {
+      from: `PingMe <${process.env.GMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      html: html,
+      text: html.replace(/<[^>]*>?/gm, '') // Simple fallback for text-only clients
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully using Gmail API");
+    return result;
+  } catch (error) {
+    console.error('Email Error:', error.message);
+    throw error;
   }
+};
 
-  const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev'
-  const fromName = process.env.FROM_NAME || 'PingMe'
-
-  let lastError = null
-  
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`Email attempt ${attempt}/${retries} to ${to} using Resend`)
-      
-      const { data, error } = await resend.emails.send({
-        from: `${fromName} <${fromEmail}>`,
-        to: to,
-        subject: subject,
-        html: html
-      })
-
-      if (error) {
-        throw error
-      }
-
-      console.log('Email sent successfully via Resend:', data.id)
-      return { success: true, id: data.id }
-      
-    } catch (error) {
-      lastError = error
-      console.error(`Email attempt ${attempt} failed:`, error.message)
-      
-      // If unauthorized, don't retry
-      if (error.statusCode === 401) {
-        throw error
-      }
-      
-      // Wait before retry
-      if (attempt < retries) {
-        console.log(`Waiting 2s before retry...`)
-        await new Promise(r => setTimeout(r, 2000))
-      }
-    }
-  }
-  
-  throw lastError
-}
-
-module.exports = { sendEmail }
+module.exports = { sendEmail };

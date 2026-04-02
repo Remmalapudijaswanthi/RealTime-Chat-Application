@@ -224,33 +224,32 @@ router.post('/send-otp',
   }
 )
 
-router.get('/test-smtp', async (req, res) => {
+// Test route to verify Gmail API (OAuth2) is configured properly
+router.get('/test-gmail-api', async (req, res) => {
   try {
-    const { sendEmail } = require('../config/mailer')
-    
-    if (!process.env.RESEND_API_KEY) {
+    const isConfigured = 
+      process.env.GMAIL_USER && 
+      process.env.CLIENT_ID && 
+      process.env.CLIENT_SECRET && 
+      process.env.REFRESH_TOKEN;
+
+    if (!isConfigured) {
       return res.status(400).json({
         success: false,
-        message: 'RESEND_API_KEY is not set in Environment Variables'
-      })
+        message: "Gmail API credentials (GMAIL_USER, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN) are missing."
+      });
     }
 
-    // Try sending a test email to the configured sender or a provided email
-    // This also serves as a verification check
-    res.json({
+    res.status(200).json({
       success: true,
-      message: 'Resend API Key is detected',
-      resendKey: 'SET ✓',
-      info: 'To fully test, try registering with a real email.'
-    })
+      message: "Gmail API credentials detected",
+      status: "READY ✓",
+      info: "To fully test, try registering with any real email."
+    });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      code: error.code
-    })
+    res.status(500).json({ success: false, message: error.message });
   }
-})
+});
 
 // POST /api/auth/verify-register
 router.post('/verify-register', async (req, res) => {
