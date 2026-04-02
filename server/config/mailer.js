@@ -10,6 +10,9 @@ const sendEmail = async (to, subject, html, retries = 2) => {
     throw new Error('Email service configuration missing')
   }
 
+  const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev'
+  const fromName = process.env.FROM_NAME || 'PingMe'
+
   let lastError = null
   
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -17,7 +20,7 @@ const sendEmail = async (to, subject, html, retries = 2) => {
       console.log(`Email attempt ${attempt}/${retries} to ${to} using Resend`)
       
       const { data, error } = await resend.emails.send({
-        from: 'PingMe <onboarding@resend.dev>', // Default for unverified domains
+        from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
         html: html
