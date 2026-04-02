@@ -2,9 +2,9 @@ const nodemailer = require('nodemailer')
 
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
-    port: 465,
-    secure: true,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // STARTTLS — required for Railway (port 465 is blocked)
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
@@ -13,9 +13,9 @@ const createTransporter = () => {
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
     },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 60000,
     pool: false,
     logger: false,
     debug: false
