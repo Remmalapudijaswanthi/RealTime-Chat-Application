@@ -208,7 +208,7 @@ router.post('/send-otp',
       if (error.code === 'EAUTH') {
         message = 'Email service error. Contact support.'
         console.error('SMTP AUTH FAILED -',
-          'Check SMTP_USER and SMTP_PASS in Render')
+          'Check SMTP_USER and SMTP_PASS in Railway')
       }
       
       if (error.code === 'ECONNECTION' || 
@@ -228,10 +228,9 @@ router.get('/test-smtp', async (req, res) => {
   try {
     const nodemailer = require('nodemailer')
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -246,13 +245,14 @@ router.get('/test-smtp', async (req, res) => {
       smtpUser: process.env.SMTP_USER || 'NOT SET',
       smtpPass: process.env.SMTP_PASS 
         ? 'SET ✓' : 'NOT SET ✗',
-      port: 465,
-      secure: true
+      port: 587,
+      secure: false
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,
+      code: error.code,
       smtpUser: process.env.SMTP_USER || 'NOT SET',
       smtpPass: process.env.SMTP_PASS 
         ? 'SET ✓' : 'NOT SET ✗'
