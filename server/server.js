@@ -12,9 +12,11 @@ dotenv.config();
 // Check required env vars
 const requiredEnvVars = [
   'MONGO_URI',
-  'JWT_SECRET', 
-  'SMTP_USER',
-  'SMTP_PASS'
+  'JWT_SECRET',
+  'GMAIL_USER',
+  'CLIENT_ID',
+  'CLIENT_SECRET',
+  'REFRESH_TOKEN'
 ]
 
 const missing = requiredEnvVars.filter(
@@ -26,9 +28,7 @@ if (missing.length > 0) {
     missing.join(', '))
   console.error('Server may not work correctly!')
 } else {
-  console.log('All environment variables set ✓')
-  console.log('SMTP_USER:', process.env.SMTP_USER)
-  console.log('PORT:', process.env.SMTP_PORT || 465)
+  console.log('All environment variables set successfully ✓')
 }
 
 // Import routes
