@@ -140,13 +140,6 @@ export default function MyProfileModal({ isOpen, onClose }) {
 
   if (!user) return null;
 
-  const bgColor = isLightMode ? '#FAF5EB' : 'var(--bg-secondary, #1A1A1A)';
-  const borderColor = isLightMode ? '#E8D5B0' : 'var(--border, #2A2A2A)';
-  const surfaceColor = isLightMode ? '#F5EDD8' : 'var(--bg-surface, #111111)';
-  const textColor = isLightMode ? '#2C1810' : 'var(--text-primary, #F8FAFC)';
-  const textMuted = isLightMode ? '#A0856A' : 'var(--text-muted, #6B7280)';
-  const textSecondary = isLightMode ? '#6B4C35' : 'var(--text-secondary, #94A3B8)';
-  
   const maskedEmail = user.email ? `${user.email.substring(0,2)}***@${user.email.split('@')[1]}` : 'Not set';
 
   const handleUpdatePassword = async () => {
@@ -184,16 +177,11 @@ export default function MyProfileModal({ isOpen, onClose }) {
   const Toggle = ({ value, onChange }) => (
     <button
       onClick={onChange}
-      style={{
-        width: '44px', height: '24px', borderRadius: '12px',
-        background: value ? '#22C55E' : '#334155',
-        position: 'relative', cursor: 'pointer', border: 'none',
-        transition: 'background 0.3s', flexShrink: 0
-      }}
+      className={`toggle-switch ${value ? 'active' : ''}`}
     >
       <motion.div
         layout initial={false} animate={{ x: value ? 20 : 2 }}
-        style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#FFF', position: 'absolute', top: '2px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+        className="toggle-knob"
       />
     </button>
   );
@@ -201,20 +189,18 @@ export default function MyProfileModal({ isOpen, onClose }) {
   const SettingsRow = ({ icon, label, sub, onClick, trailing }) => (
     <button
       onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 16px', background: surfaceColor, border: 'none', borderBottom: `1px solid ${borderColor}`, cursor: onClick ? 'pointer' : 'default', textAlign: 'left', width: '100%', transition: 'background 0.2s' }}
-      onMouseEnter={e => { if (onClick) e.currentTarget.style.background = isLightMode ? '#EDD9B5' : 'rgba(255,255,255,0.05)' }}
-      onMouseLeave={e => { if (onClick) e.currentTarget.style.background = surfaceColor }}
+      className="settings-row-btn"
     >
       {icon && (
-        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: isLightMode ? 'rgba(124,58,237,0.1)' : 'rgba(124,58,237,0.15)', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+        <div className="settings-row-icon">
           {icon}
         </div>
       )}
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>{label}</div>
-        {sub && <div style={{ fontSize: '12px', color: textSecondary, marginTop: '2px' }}>{sub}</div>}
+      <div className="settings-row-content">
+        <div className="settings-row-label">{label}</div>
+        {sub && <div className="settings-row-sub">{sub}</div>}
       </div>
-      {trailing || (onClick && <span style={{ color: textMuted, fontSize: '16px', fontWeight: 'bold' }}>›</span>)}
+      {trailing || (onClick && <span className="settings-row-arrow">›</span>)}
     </button>
   );
 
@@ -222,45 +208,39 @@ export default function MyProfileModal({ isOpen, onClose }) {
 
   const renderProfileContent = () => (
     <motion.div key="profile" initial={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+      <div className="profile-info-header">
+        <div className="profile-name-edit">
           {isEditingName ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="profile-name-input-wrapper">
               <input autoFocus type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                style={{ background: surfaceColor, border: '1.5px solid var(--accent)', borderRadius: '8px', padding: '6px 12px', color: textColor, fontSize: '18px', textAlign: 'center' }} />
-              <button onClick={() => handleUpdateProfile({ username })} style={{ color: '#22C55E', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✓</button>
+                className="profile-input profile-name-input" />
+              <button onClick={() => handleUpdateProfile({ username })} className="profile-save-btn">✓</button>
             </div>
           ) : (
             <>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', margin: 0, color: textColor }}>{user.username}</h2>
-              <div title="Username cannot be changed" style={{ background: surfaceColor, padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'help' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: textMuted }}>
+              <h2 className="profile-display-name">{user.username}</h2>
+              <div title="Username cannot be changed" className="profile-lock-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
               </div>
             </>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px' }}>
-          <span style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: '500' }}>@{user.username}</span>
+        <div className="profile-handle-row">
+          <span className="profile-handle">@{user.username}</span>
         </div>
-        <div style={{ position: 'relative', marginTop: '16px', display: 'inline-block' }}>
-          <button onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-            style={{ background: surfaceColor, border: `1px solid ${borderColor}`, borderRadius: '20px', padding: '6px 16px', color: textColor, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: statusOptions.find(o => o.val === user.status)?.color || '#22C55E' }} />
+        <div className="profile-status-wrapper">
+          <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className="profile-status-btn">
+            <span className="status-indicator" style={{ background: statusOptions.find(o => o.val === user.status)?.color || '#22C55E' }} />
             {user.status || 'Online'}
           </button>
           <AnimatePresence>
             {showStatusDropdown && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px', background: bgColor, border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '6px', width: '140px', zIndex: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="profile-status-dropdown">
                 {statusOptions.map(opt => (
-                  <button key={opt.val} onClick={() => handleStatusChange(opt.val)}
-                    style={{ width: '100%', padding: '8px 12px', background: 'none', border: 'none', borderRadius: '8px', color: textColor, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', textAlign: 'left' }} 
-                    onMouseEnter={e => e.currentTarget.style.background = surfaceColor}
-                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                  >
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: opt.color }} />{opt.label}
+                  <button key={opt.val} onClick={() => handleStatusChange(opt.val)} className="status-option-btn">
+                    <span className="status-indicator-small" style={{ background: opt.color }} />{opt.label}
                   </button>
                 ))}
               </motion.div>
@@ -269,38 +249,34 @@ export default function MyProfileModal({ isOpen, onClose }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', color: textMuted, marginBottom: '8px', letterSpacing: '0.05em' }}>About</label>
+      <div className="profile-about-section">
+        <label className="profile-section-label">About</label>
         {isEditingBio ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="profile-bio-edit-wrapper">
             <textarea autoFocus value={bio} onChange={(e) => setBio(e.target.value.substring(0, 100))}
-              style={{ background: surfaceColor, border: '1.5px solid var(--accent)', borderRadius: '12px', padding: '12px', color: textColor, fontSize: '14px', minHeight: '80px', resize: 'none' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: textMuted }}>{bio.length}/100</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setIsEditingBio(false)} style={{ fontSize: '13px', background: 'none', border: 'none', color: textMuted, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => handleUpdateProfile({ bio })} style={{ fontSize: '13px', background: 'none', border: 'none', color: 'var(--accent)', fontWeight: '600', cursor: 'pointer' }}>Save</button>
+              className="profile-input profile-bio-input" />
+            <div className="profile-bio-footer">
+              <span className="bio-char-count">{bio.length}/100</span>
+              <div className="bio-actions">
+                <button onClick={() => setIsEditingBio(false)} className="bio-cancel-btn">Cancel</button>
+                <button onClick={() => handleUpdateProfile({ bio })} className="profile-save-btn">Save</button>
               </div>
             </div>
           </div>
         ) : (
-          <div onClick={() => setIsEditingBio(true)} style={{ fontSize: '15px', color: bio ? textColor : 'var(--accent)', cursor: 'pointer' }}>
+          <div onClick={() => setIsEditingBio(true)} className="profile-bio-display">
             {bio || '+ Add bio'}
           </div>
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', borderRadius: '14px', overflow: 'hidden', border: `1px solid ${borderColor}` }}>
+      <div className="profile-menu-list">
         <SettingsRow icon="🎨" label="Appearance" sub="Themes, wallpaper, dark/light" onClick={() => setActivePage('appearance')} />
         <SettingsRow icon="🔒" label="Privacy" sub="Last seen, online status, message seen" onClick={() => setActivePage('privacy')} />
-        <SettingsRow icon="🔑" label="Account" sub="Change password, email" onClick={() => setActivePage('account')} trailing={<span style={{ color: textMuted, fontSize: '16px', fontWeight: 'bold' }}>›</span>} />
+        <SettingsRow icon="🔑" label="Account" sub="Change password, email" onClick={() => setActivePage('account')} />
       </div>
 
-      <button onClick={logout}
-        style={{ marginTop: '24px', width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', color: '#EF4444', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'background 0.2s' }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'none'}
-      >
+      <button onClick={logout} className="profile-logout-btn">
         🚪 Logout
       </button>
     </motion.div>
@@ -309,10 +285,10 @@ export default function MyProfileModal({ isOpen, onClose }) {
   // ========== APPEARANCE PAGE ==========
   const renderAppearancePage = () => (
     <motion.div key="appearance" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ duration: 0.2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <button onClick={() => setActivePage('profile')} style={{ background: 'none', border: 'none', color: textColor, cursor: 'pointer', fontSize: '20px' }}>←</button>
-        <span style={{ fontSize: '20px' }}>🎨</span>
-        <h3 style={{ margin: 0, fontSize: '18px', color: textColor }}>Appearance</h3>
+      <div className="profile-submenu-header">
+        <button onClick={() => setActivePage('profile')} className="back-arrow-btn">←</button>
+        <span className="submenu-icon">🎨</span>
+        <h3 className="submenu-title">Appearance</h3>
       </div>
 
       <SettingsRow icon="🌓" label="Color Mode" sub={isLightMode ? 'Light mode' : 'Dark mode'}
@@ -324,10 +300,10 @@ export default function MyProfileModal({ isOpen, onClose }) {
   // ========== PRIVACY PAGE ==========
   const renderPrivacyPage = () => (
     <motion.div key="privacy" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ duration: 0.2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <button onClick={() => setActivePage('profile')} style={{ background: 'none', border: 'none', color: textColor, cursor: 'pointer', fontSize: '20px' }}>←</button>
-        <span style={{ fontSize: '20px' }}>🔒</span>
-        <h3 style={{ margin: 0, fontSize: '18px', color: textColor }}>Privacy</h3>
+      <div className="profile-submenu-header">
+        <button onClick={() => setActivePage('profile')} className="back-arrow-btn">←</button>
+        <span className="submenu-icon">🔒</span>
+        <h3 className="submenu-title">Privacy</h3>
       </div>
 
       <SettingsRow icon="⏰" label="Show My Last Active Time" sub="Let others see when you were last active"
@@ -340,13 +316,12 @@ export default function MyProfileModal({ isOpen, onClose }) {
         trailing={<Toggle value={privacySettings.notifications} onChange={() => togglePrivacySetting('notifications')} />} />
 
       {/* Chat Lock Section */}
-      <div style={{ marginTop: '28px' }}>
-        <label style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', color: '#6B7280', marginBottom: '12px', letterSpacing: '0.05em' }}>Chat Lock</label>
+      <div className="profile-lock-section">
+        <label className="profile-section-label">Chat Lock</label>
         {user?.settings?.chatLockPin ? (
           <>
             <SettingsRow icon="🔐" label="Change PIN" sub="Update your 4-digit chat lock PIN" onClick={() => { setLockMode('setup'); setShowLockSetup(true); }} />
-            <button onClick={handleRemovePin}
-              style={{ width: '100%', padding: '12px', marginTop: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', color: '#EF4444', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}>
+            <button onClick={handleRemovePin} className="remove-pin-btn">
               🗑️ Remove PIN & Unlock All
             </button>
           </>
@@ -359,62 +334,62 @@ export default function MyProfileModal({ isOpen, onClose }) {
 
   const renderAccountPage = () => (
     <motion.div key="account" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ duration: 0.2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <button onClick={() => setActivePage('profile')} style={{ background: 'none', border: 'none', color: textColor, cursor: 'pointer', fontSize: '20px' }}>←</button>
-        <span style={{ fontSize: '20px' }}>🔑</span>
-        <h3 style={{ margin: 0, fontSize: '18px', color: textColor }}>Account</h3>
+      <div className="profile-submenu-header">
+        <button onClick={() => setActivePage('profile')} className="back-arrow-btn">←</button>
+        <span className="submenu-icon">🔑</span>
+        <h3 className="submenu-title">Account</h3>
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
-        <h4 style={{ color: textMuted, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Security</h4>
+      <div className="account-security-section">
+        <h4 className="account-section-title">Security</h4>
         
         {/* Change Password Card */}
-        <div style={{ background: surfaceColor, borderRadius: '14px', padding: '16px', marginBottom: '12px', border: `1px solid ${borderColor}` }}>
-          <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', color: textColor }}>Change Password</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: textMuted, marginBottom: '4px' }}>Current Password</label>
-              <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ background: bgColor, border: `1px solid ${borderColor}`, padding: '10px 12px', borderRadius: '8px', color: textColor, width: '100%', boxSizing: 'border-box' }} />
+        <div className="settings-card">
+          <h4 className="card-title">Change Password</h4>
+          <div className="card-form">
+            <div className="form-group">
+              <label className="form-label">Current Password</label>
+              <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="profile-input" />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: textMuted, marginBottom: '4px' }}>New Password</label>
-              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ background: bgColor, border: `1px solid ${borderColor}`, padding: '10px 12px', borderRadius: '8px', color: textColor, width: '100%', boxSizing: 'border-box' }} />
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="profile-input" />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: textMuted, marginBottom: '4px' }}>Confirm New Password</label>
-              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ background: bgColor, border: `1px solid ${borderColor}`, padding: '10px 12px', borderRadius: '8px', color: textColor, width: '100%', boxSizing: 'border-box' }} />
+            <div className="form-group">
+              <label className="form-label">Confirm New Password</label>
+              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="profile-input" />
             </div>
-            {passwordError && <div style={{ color: '#EF4444', fontSize: '12px' }}>{passwordError}</div>}
-            <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ background: 'linear-gradient(135deg, #7C3AED, #4F46E5)', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', width: '100%', marginTop: '4px', transition: 'opacity 0.2s' }}>
+            {passwordError && <div className="form-error">{passwordError}</div>}
+            <button onClick={handleUpdatePassword} disabled={passwordLoading} className="form-submit-btn">
               {passwordLoading ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </div>
 
         {/* Reset Password Card */}
-        <div style={{ background: surfaceColor, borderRadius: '14px', padding: '16px', border: `1px solid ${borderColor}` }}>
-          <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor }}>Forgot Password?</h4>
-          <div style={{ color: textMuted, fontSize: '13px', marginBottom: '12px' }}>Send a reset link to your email ({maskedEmail})</div>
-          <button onClick={handleSendResetLink} style={{ border: '1px solid #7C3AED', background: 'transparent', color: '#7C3AED', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}>
+        <div className="settings-card">
+          <h4 className="card-title">Forgot Password?</h4>
+          <div className="card-description">Send a reset link to your email ({maskedEmail})</div>
+          <button onClick={handleSendResetLink} className="card-action-btn">
             {resetEmailSent ? 'Link Sent • Check Email' : 'Send Reset Link'}
           </button>
         </div>
       </div>
 
-      <div>
-        <h4 style={{ color: textMuted, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', marginTop: '24px' }}>Account Info</h4>
-        <div style={{ background: surfaceColor, borderRadius: '14px', padding: '0 16px', border: `1px solid ${borderColor}` }}>
-          <div style={{ padding: '16px 0', borderBottom: `1px solid ${borderColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>Email Address</span>
-            <span style={{ color: textSecondary, fontSize: '14px' }}>{maskedEmail}</span>
+      <div className="account-info-section">
+        <h4 className="account-section-title">Account Info</h4>
+        <div className="info-list-card">
+          <div className="info-list-item">
+            <span className="info-label">Email Address</span>
+            <span className="info-value">{maskedEmail}</span>
           </div>
-          <div style={{ padding: '16px 0', borderBottom: `1px solid ${borderColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>Username</span>
-            <span style={{ color: textSecondary, fontSize: '14px' }}>@{user.username} <span style={{fontSize:'11px',opacity:0.6}}>(cannot change)</span></span>
+          <div className="info-list-item">
+            <span className="info-label">Username</span>
+            <span className="info-value">@{user.username} <span className="info-hint">(cannot change)</span></span>
           </div>
-          <div style={{ padding: '16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>Member Since</span>
-            <span style={{ color: textSecondary, fontSize: '14px' }}>{new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+          <div className="info-list-item no-border">
+            <span className="info-label">Member Since</span>
+            <span className="info-value">{new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
       </div>
@@ -424,77 +399,36 @@ export default function MyProfileModal({ isOpen, onClose }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', padding: '16px' }}
-          onClick={onClose}
-        >
+        <div className="modal-overlay" onClick={onClose}>
           <motion.div
-            className="profile-modal"
+            className="modal-content profile-modal"
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
-            style={{ position: 'relative', width: '440px', maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', overflowX: 'hidden', background: bgColor, borderRadius: '24px', border: `1px solid ${borderColor}`, boxShadow: '0 32px 80px rgba(0,0,0,0.6)', margin: 'auto', display: 'flex', flexDirection: 'column' }}
           >
-            <div style={{ height: '140px', background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)', position: 'relative', flexShrink: 0 }}>
-              <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', zIndex: 10 }}>✕</button>
-              <div style={{ position: 'absolute', bottom: '-40px', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="profile-header-banner">
+              <button onClick={onClose} className="profile-close-btn">✕</button>
+              <div className="profile-avatar-wrapper">
                 <div
-                  style={{
-                    position: 'relative',
-                    width: 90,
-                    height: 90,
-                    cursor: 'pointer',
-                    borderRadius: '50%',
-                    border: '4px solid var(--bg-secondary)'
-                  }}
+                  className="profile-avatar-container"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {/* Profile photo or initials */}
                   {user.avatar ? (
                     <img
                       src={user.avatar}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        display: 'block'
-                      }}
+                      className="profile-avatar-img"
                     />
                   ) : (
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #7C3AED, #C084FC)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 32,
-                      fontWeight: 700,
-                      color: 'white'
-                    }}>
+                    <div className="profile-avatar-initials">
                       {user.username?.[0]?.toUpperCase()}
                     </div>
                   )}
 
                   {/* Camera overlay — ALWAYS visible */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: '#C084FC',
-                    border: '2px solid var(--bg-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-                  }}>
+                  <div className="profile-camera-icon">
                     <svg
                       width="14" height="14"
                       viewBox="0 0 24 24"
@@ -509,44 +443,12 @@ export default function MyProfileModal({ isOpen, onClose }) {
                   </div>
 
                   {/* Hover overlay for desktop */}
-                  <div
-                    className="photo-hover-overlay"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      borderRadius: '50%',
-                      background: 'rgba(0,0,0,0)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'background 0.2s',
-                      gap: 4
-                    }}
-                  >
-                    <span style={{
-                      color: 'white',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      opacity: 0,
-                      transition: 'opacity 0.2s'
-                    }}
-                    className="photo-change-text">
-                      Change
-                    </span>
+                  <div className="photo-hover-overlay">
+                    <span className="photo-change-text">Change</span>
                   </div>
                 </div>
 
-                <p style={{
-                  fontSize: 11,
-                  color: 'var(--accent)',
-                  textAlign: 'center',
-                  marginTop: 6,
-                  marginBottom: 0,
-                  cursor: 'pointer'
-                }}
-                onClick={() => fileInputRef.current?.click()}
-                >
+                <p className="avatar-change-hint" onClick={() => fileInputRef.current?.click()}>
                   Tap to change photo
                 </p>
 
@@ -557,14 +459,10 @@ export default function MyProfileModal({ isOpen, onClose }) {
                   style={{ display: 'none' }}
                   onChange={handleAvatarChange}
                 />
-                <style dangerouslySetInnerHTML={{__html: `
-                  .photo-hover-overlay:hover { background: rgba(0,0,0,0.5) !important; }
-                  .photo-hover-overlay:hover .photo-change-text { opacity: 1 !important; }
-                `}} />
               </div>
             </div>
 
-            <div style={{ padding: '50px 24px 24px', flex: 1, overflowY: 'auto' }}>
+            <div className="profile-body">
               <AnimatePresence mode="wait">
                 {activePage === 'profile' && renderProfileContent()}
                 {activePage === 'appearance' && renderAppearancePage()}
@@ -588,7 +486,7 @@ export default function MyProfileModal({ isOpen, onClose }) {
             mode={lockMode}
             onVerify={(pin) => {
               setShowLockSetup(false);
-              setUser(prev => ({ ...prev, settings: { ...prev.settings, chatLockPin: 'exists' } }));
+              setUser(prev => ({ ...prev, settings: { ...prev.settings, chatLockPin: pin } }));
             }}
             onClose={() => setShowLockSetup(false)}
           />
@@ -597,4 +495,3 @@ export default function MyProfileModal({ isOpen, onClose }) {
     </AnimatePresence>
   );
 }
-

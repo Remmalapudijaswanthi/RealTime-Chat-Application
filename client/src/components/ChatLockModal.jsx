@@ -4,7 +4,7 @@ import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 
 export default function ChatLockModal({ isOpen, mode = 'verify', onVerify, onClose }) {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,7 +57,7 @@ export default function ChatLockModal({ isOpen, mode = 'verify', onVerify, onClo
         if (finalPin === firstPin) {
           try {
             setLoading(true);
-            const res = await axiosInstance.post('/api/users/profile/chat-lock/pin', { pin: finalPin });
+            await axiosInstance.post('/api/users/profile/chat-lock/pin', { pin: finalPin });
             setUser(prev => ({ ...prev, settings: { ...prev.settings, chatLockPin: 'exists' } }));
             onVerify(finalPin);
           } catch (err) {
@@ -83,128 +83,70 @@ export default function ChatLockModal({ isOpen, mode = 'verify', onVerify, onClo
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        style={{ 
-          zIndex: 2000, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backdropFilter: 'blur(12px)',
-          background: 'rgba(0,0,0,0.8)'
-        }}
       >
         <motion.div 
           className="chat-lock-card"
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.92, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          style={{
-            width: '100%',
-            maxWidth: '320px',
-            background: '#111111',
-            borderRadius: '24px',
-            padding: '40px 24px',
-            textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,255,255,0.05)'
-          }}
+          exit={{ scale: 0.92, opacity: 0, y: 20 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ marginBottom: '24px' }}>
-            <span style={{ fontSize: '40px' }}>🔒</span>
-            <h2 style={{ marginTop: '16px', fontSize: '20px', fontWeight: '700', color: 'white' }}>
+          <div className="chat-lock-header">
+            <div className="chat-lock-icon">🔒</div>
+            <h2 className="chat-lock-title">
               {mode === 'verify' ? 'Chat Locked' : setupStep === 1 ? 'Set Up PIN' : 'Confirm PIN'}
             </h2>
-            <p style={{ color: '#64748B', fontSize: '14px', marginTop: '8px' }}>
+            <p className="chat-lock-subtitle">
               {mode === 'verify' ? 'Enter your 4-digit PIN to continue' : 'Create a 4-digit PIN for your chats'}
             </p>
           </div>
 
-          {/* PIN Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+          <div className="pin-dots-container">
             {[0, 1, 2, 3].map(i => (
               <div 
                 key={i} 
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  borderRadius: '50%',
-                  background: pin.length > i ? '#C084FC' : '#1F2937',
-                  border: pin.length > i ? 'none' : '1px solid #374151',
-                  transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  transform: pin.length > i ? 'scale(1.2)' : 'scale(1)'
-                }}
+                className={`pin-dot ${pin.length > i ? 'active' : ''}`}
               />
             ))}
           </div>
 
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ color: '#EF4444', fontSize: '13px', marginBottom: '20px' }}
-            >
-              {error}
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                className="chat-lock-error"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Keypad */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)', 
-            gap: '16px',
-            maxWidth: '240px',
-            margin: '0 auto' 
-          }}>
+          <div className="keypad-grid">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
               <button 
                 key={num}
                 onClick={() => handleNumberClick(num.toString())}
-                style={{
-                  height: '60px',
-                  width: '60px',
-                  borderRadius: '50%',
-                  background: '#1A1A1A',
-                  border: 'none',
-                  color: 'white',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                }}
-                className="pin-btn-hover"
+                className="keypad-btn"
+                disabled={loading}
               >
                 {num}
               </button>
             ))}
-            <div />
+            <div className="keypad-spacer"></div>
             <button 
               onClick={() => handleNumberClick('0')}
-              style={{
-                height: '60px',
-                width: '60px',
-                borderRadius: '50%',
-                background: '#1A1A1A',
-                border: 'none',
-                color: 'white',
-                fontSize: '20px',
-                fontWeight: '600',
-                cursor: 'pointer',
-              }}
-              className="pin-btn-hover"
+              className="keypad-btn"
+              disabled={loading}
             >
               0
             </button>
             <button 
               onClick={handleBackspace}
-              style={{
-                height: '60px',
-                width: '60px',
-                borderRadius: '50%',
-                background: 'none',
-                border: 'none',
-                color: '#64748B',
-                fontSize: '18px',
-                cursor: 'pointer',
-              }}
+              className="keypad-btn keypad-btn-special"
+              disabled={loading}
             >
               ⌫
             </button>
@@ -212,15 +154,7 @@ export default function ChatLockModal({ isOpen, mode = 'verify', onVerify, onClo
 
           <button 
             onClick={onClose}
-            style={{ 
-              marginTop: '32px', 
-              background: 'none', 
-              border: 'none', 
-              color: '#64748B', 
-              fontSize: '14px', 
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            className="chat-lock-cancel-btn"
           >
             Cancel
           </button>

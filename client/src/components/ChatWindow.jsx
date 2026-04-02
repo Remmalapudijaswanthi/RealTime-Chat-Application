@@ -1032,21 +1032,9 @@ export default function ChatWindow({
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                style={{
-                  position: 'absolute',
-                  bottom: '68px',
-                  left: '8px',
-                  width: '280px',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--border)',
-                  padding: '16px',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
-                  zIndex: 200
-                }}
               >
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Share</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                <div className="attachment-menu-title">Share</div>
+                <div className="attach-grid">
                   {[
                     { label: 'Camera', icon: '📷', bg: '#FEF3C7', ref: cameraRef },
                     { label: 'Photos', icon: '🖼️', bg: '#EDE9FE', ref: photoRef },
@@ -1065,20 +1053,8 @@ export default function ChatWindow({
                         }
                         setShowAttachMenu(false); 
                       }}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '12px 8px',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        border: 'none',
-                        background: 'var(--bg-surface)',
-                        transition: 'all 0.15s ease'
-                      }}
                     >
-                      <div style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', background: opt.bg }}>
+                      <div className="attach-icon-circle" style={{ background: opt.bg }}>
                         {opt.icon}
                       </div>
                       <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>{opt.label}</span>
@@ -1143,17 +1119,18 @@ export default function ChatWindow({
 
           <div className="chat-input-wrapper">
             {isRecording ? (
-              <div className="recording-ui" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span className="recording-dot" style={{ width: '8px', height: '8px', background: '#ff2e74', borderRadius: '50%' }} />
-                <span className="recording-time" style={{ color: 'var(--text-primary)', fontSize: '14px' }}>
+              <div className="recording-ui">
+                <span className="recording-dot" />
+                <span className="recording-time">
                   {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, '0')}
                 </span>
-                <div className="recording-placeholder" style={{ flex: 1, color: 'var(--text-muted)', fontSize: '14px' }}>Recording...</div>
-                <button className="cancel-rec-btn" onClick={cancelRecording} style={{ background: 'none', border: 'none', color: '#ff2e74', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Cancel</button>
+                <div className="recording-placeholder">Recording...</div>
+                <button className="cancel-rec-btn" onClick={cancelRecording}>Cancel</button>
               </div>
             ) : uploading ? (
-              <div className="upload-progress-container" style={{ flex: 1, position: 'relative', background: 'var(--bg-secondary)', borderRadius: '12px', overflow: 'hidden', padding: '12px', display: 'flex', alignItems: 'center' }}>
+              <div className="upload-progress-container">
                 <motion.div 
+                  className="upload-progress-shimmer"
                   initial={{ width: 0, left: '-100%' }} 
                   animate={{ left: '100%' }} 
                   transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} 
@@ -1389,23 +1366,6 @@ export default function ChatWindow({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
             onClick={() => scrollToBottom()}
-            style={{
-              position: 'absolute',
-              bottom: '100px',
-              right: '20px',
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              background: '#1A1A1A',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 100,
-              boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
-            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>
