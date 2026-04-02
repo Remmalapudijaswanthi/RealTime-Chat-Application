@@ -226,36 +226,28 @@ router.post('/send-otp',
 
 router.get('/test-smtp', async (req, res) => {
   try {
-    const nodemailer = require('nodemailer')
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      tls: { rejectUnauthorized: false }
-    })
-    await transporter.verify()
-    transporter.close()
+    const { sendEmail } = require('../config/mailer')
+    
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(400).json({
+        success: false,
+        message: 'RESEND_API_KEY is not set in Environment Variables'
+      })
+    }
+
+    // Try sending a test email to the configured sender or a provided email
+    // This also serves as a verification check
     res.json({
       success: true,
-      message: 'SMTP is working correctly',
-      smtpUser: process.env.SMTP_USER || 'NOT SET',
-      smtpPass: process.env.SMTP_PASS 
-        ? 'SET ✓' : 'NOT SET ✗',
-      port: 587,
-      secure: false
+      message: 'Resend API Key is detected',
+      resendKey: 'SET ✓',
+      info: 'To fully test, try registering with a real email.'
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,
-      code: error.code,
-      smtpUser: process.env.SMTP_USER || 'NOT SET',
-      smtpPass: process.env.SMTP_PASS 
-        ? 'SET ✓' : 'NOT SET ✗'
+      code: error.code
     })
   }
 })

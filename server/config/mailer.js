@@ -1,60 +1,41 @@
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend')
 
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // STARTTLS — required for Railway (port 465 is blocked)
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    },
-    tls: {
-      rejectUnauthorized: false,
-      minVersion: 'TLSv1.2'
-    },
-    connectionTimeout: 60000,
-    greetingTimeout: 60000,
-    socketTimeout: 60000,
-    pool: false,
-    logger: false,
-    debug: false
-  })
-}
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY) 
+  : null
 
 const sendEmail = async (to, subject, html, retries = 2) => {
+  if (!resend) {
+    console.error('RESEND_API_KEY is not set')
+    throw new Error('Email service configuration missing')
+  }
+
   let lastError = null
   
   for (let attempt = 1; attempt <= retries; attempt++) {
-    const transporter = createTransporter()
-    
     try {
-      console.log(`Email attempt ${attempt}/${retries} to ${to}`)
-      console.log('SMTP_USER:', process.env.SMTP_USER ? 'SET' : 'NOT SET')
-      console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'SET' : 'NOT SET')
+      console.log(`Email attempt ${attempt}/${retries} to ${to} using Resend`)
       
-      const info = await transporter.sendMail({
-        from: `"PingMe" <${process.env.SMTP_USER}>`,
+      const { data, error } = await resend.emails.send({
+        from: 'PingMe <onboarding@resend.dev>', // Default for unverified domains
         to: to,
         subject: subject,
         html: html
       })
-      console.log('Email sent successfully:', 
-        info.messageId)
-      transporter.close()
-      return { success: true }
+
+      if (error) {
+        throw error
+      }
+
+      console.log('Email sent successfully via Resend:', data.id)
+      return { success: true, id: data.id }
       
     } catch (error) {
       lastError = error
-      console.error(`Email attempt ${attempt} failed:`, 
-        error.message)
-      console.error('Error code:', error.code)
-      console.error('Error response:', 
-        error.response)
-      transporter.close()
+      console.error(`Email attempt ${attempt} failed:`, error.message)
       
-      // If auth error, don't retry
-      if (error.code === 'EAUTH') {
+      // If unauthorized, don't retry
+      if (error.statusCode === 401) {
         throw error
       }
       
