@@ -101,6 +101,7 @@ export function useChat() {
       if (!socket || !currentRoom) return;
       if (!content.trim() && !options.type) return;
 
+      const tempId = `temp-${Date.now()}`;
       const data = {
         roomId: currentRoom._id,
         content: content.trim(),
@@ -108,6 +109,7 @@ export function useChat() {
         fileName: options.fileName || '',
         fileSize: options.fileSize || '',
         metadata: options.metadata || null,
+        tempId, // Send tempId to server
       };
 
       // Attach reply
@@ -120,10 +122,36 @@ export function useChat() {
         };
       }
 
-      socket.emit('send_message', data);
+      // Optimistic Update
+      const optimisticMsg = {
+        _id: tempId,
+        sender: {
+          _id: user._id,
+          username: user.username,
+          avatar: user.avatar,
+        },
+        room: currentRoom._id,
+        content: content.trim(),
+        type: data.type,
+        status: 'sending',
+        createdAt: new Date().toISOString(),
+        replyTo: data.replyTo,
+      };
+
+      setMessages((prev) => [...prev, optimisticMsg]);
+
+      socket.emit('send_message', data, (ack) => {
+        if (ack && ack.success) {
+          // Replace optimistic message with confirmed one
+          setMessages((prev) =>
+            prev.map((msg) => (msg._id === tempId ? ack.data : msg))
+          );
+        }
+      });
+      
       setReplyingTo(null);
     },
-    [socket, currentRoom, replyingTo]
+    [socket, currentRoom, replyingTo, user]
   );
 
   // Add reaction

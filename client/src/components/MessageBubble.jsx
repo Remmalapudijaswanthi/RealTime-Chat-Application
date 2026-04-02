@@ -349,9 +349,15 @@ export default function MessageBubble({
           border: isOwn ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid var(--border)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '2px'
+          gap: '2px',
+          opacity: message.status === 'sending' ? 0.6 : 1,
         }}
       >
+        {message.status === 'sending' && (
+          <div style={{ fontSize: '10px', fontStyle: 'italic', color: 'rgba(255,255,255,0.7)', marginBottom: '2px' }}>
+            Sending...
+          </div>
+        )}
         {showNameInBubble && (
           <span 
             className="message-sender-name"

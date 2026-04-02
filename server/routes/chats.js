@@ -170,16 +170,11 @@ router.get('/room/:roomId/messages', authMiddleware, async (req, res) => {
     const messages = await Message.find({ room: roomId })
       .populate('sender', 'username avatar')
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Message.countDocuments({ room: roomId });
+      .limit(30)
+      .lean();
 
     res.json({
       messages: messages.reverse(),
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      totalMessages: total,
     });
   } catch (error) {
     console.error('Get messages error:', error);

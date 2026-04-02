@@ -49,7 +49,7 @@ module.exports = (io) => {
     });
 
     // --- SEND MESSAGE ---
-    socket.on('send_message', async (data) => {
+    socket.on('send_message', async (data, callback) => {
       try {
         const {
           roomId,
@@ -59,11 +59,13 @@ module.exports = (io) => {
           fileSize = '',
           replyTo = null,
           metadata = null,
+          tempId = null, // Receive tempId
         } = data;
 
         // Check if sender is blocked by any room member
         const room = await ChatRoom.findById(roomId);
         if (!room) {
+          if (callback) callback({ success: false, message: 'Room not found' });
           socket.emit('error', { message: 'Room not found' });
           return;
         }
@@ -74,12 +76,14 @@ module.exports = (io) => {
           if (otherMemberId) {
             const otherUser = await User.findById(otherMemberId);
             if (otherUser && otherUser.blockedUsers?.includes(userId)) {
+              if (callback) callback({ success: false, message: 'User blocked' });
               socket.emit('error', { message: 'You cannot send messages to this user' });
               return;
             }
             // Check if current user blocked the other
             const currentUser = await User.findById(userId);
             if (currentUser && currentUser.blockedUsers?.includes(otherMemberId.toString())) {
+              if (callback) callback({ success: false, message: 'User blocked' });
               socket.emit('error', { message: 'You have blocked this user. Unblock to send messages.' });
               return;
             }
@@ -114,36 +118,50 @@ module.exports = (io) => {
           };
         }
 
-        // Create message
-        const message = await Message.create(messageData);
+        // Create message object
+        const message = new Message(messageData);
 
-        // Check delivery status (for private rooms)
-        if (room.type === 'private') {
-          const otherMemberId = room.members.find(m => m.toString() !== userId);
-          if (otherMemberId && onlineUsers.has(otherMemberId.toString())) {
-            message.delivered = true;
-            await message.save();
-          }
-        } else {
-          // Group chats reach the server and are emitted to all
-          message.delivered = true;
-          await message.save();
+        // Populate sender info for immediate emit
+        const populatedMessage = {
+          ...message.toObject(),
+          _id: message._id, // Ensure ID is present
+          sender: {
+            _id: socket.userId,
+            username: socket.user.username,
+            avatar: socket.user.avatar,
+          },
+          createdAt: new Date().toISOString(),
+          status: 'sent', // Confirmation status
+        };
+
+        // Emit back to sender via callback if present (for replacement)
+        if (callback) {
+          callback({ success: true, data: populatedMessage });
         }
 
-        // Populate sender info
-        const populatedMessage = await Message.findById(message._id)
-          .populate('sender', 'username avatar');
+        // Emit to other room members immediately (skip sender to avoid double-processing)
+        socket.to(roomId).emit('receive_message', populatedMessage);
 
-        // Update room's lastMessage
-        await ChatRoom.findByIdAndUpdate(roomId, {
-          lastMessage: message._id,
-        });
+        // Save to MongoDB in the background
+        message.save().then(async (savedMsg) => {
+          // Check delivery status (for private rooms)
+          if (room.type === 'private') {
+            const otherMemberId = room.members.find(m => m.toString() !== userId);
+            if (otherMemberId && onlineUsers.has(otherMemberId.toString())) {
+              savedMsg.delivered = true;
+              await savedMsg.save();
+            }
+          } else {
+            savedMsg.delivered = true;
+            await savedMsg.save();
+          }
 
-        // Emit to all room members
-        io.to(roomId).emit('receive_message', populatedMessage);
+          // Update room's lastMessage
+          await ChatRoom.findByIdAndUpdate(roomId, {
+            lastMessage: savedMsg._id,
+          });
 
-        // Notify room members who aren't in the room
-        if (room) {
+          // Notify room members who aren't in the room
           room.members.forEach((memberId) => {
             const memberIdStr = memberId.toString();
             if (memberIdStr !== userId) {
@@ -156,9 +174,12 @@ module.exports = (io) => {
               }
             }
           });
-        }
+        }).catch(err => {
+          console.error('Background save error:', err);
+        });
       } catch (error) {
         console.error('Send message error:', error);
+        if (callback) callback({ success: false, error });
         socket.emit('error', { message: 'Failed to send message' });
       }
     });
