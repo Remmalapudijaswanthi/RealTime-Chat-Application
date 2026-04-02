@@ -56,7 +56,8 @@ const io = new Server(server, {
       'http://localhost:5173', 
       'http://localhost:3000', 
       process.env.CLIENT_URL,
-      /\.vercel\.app$/
+      /\.vercel\.app$/,
+      /\.railway\.app$/
     ].filter(Boolean),
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
@@ -76,7 +77,8 @@ app.use(cors({
     if (!origin) return callback(null, true)
     if (
       allowedOrigins.includes(origin) ||
-      origin.endsWith('.vercel.app')
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.railway.app')
     ) {
       callback(null, true)
     } else {

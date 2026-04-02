@@ -37,7 +37,7 @@
 | **Real-Time** | Socket.io (WebSocket) |
 | **Database** | MongoDB (Mongoose) |
 | **Auth & Security**| JSON Web Tokens (JWT), Bcrypt.js, Nodemailer (OTP Verification) |
-| **Media Host** | Render/Cloudinary integration support |
+| **Media Host** | Railway/Cloudinary integration support |
 
 ---
 
@@ -98,6 +98,38 @@ To get a local copy up and running, follow these simple steps.
 
 6. **Open in Browser**
    Access `http://localhost:5173` to view the application locally.
+
+---
+
+## 🚀 Deployment
+
+### Backend → Railway
+1. Go to [railway.app](https://railway.app) and sign in with GitHub
+2. Click **New Project → Deploy from GitHub Repo**
+3. Select the `Real-time-Chat-Application` repo and set the **Root Directory** to `server`
+4. Add the following **Environment Variables** in Railway's Variables tab:
+   ```env
+   MONGO_URI=your_mongodb_atlas_uri
+   JWT_SECRET=your_jwt_secret
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your_gmail@gmail.com
+   SMTP_PASS=your_16_digit_app_password
+   FROM_NAME=PingMe
+   FROM_EMAIL=your_gmail@gmail.com
+   CLIENT_URL=https://your-app.vercel.app
+   ```
+5. Railway auto-detects Node.js and deploys. Copy the generated URL (e.g. `https://your-app.up.railway.app`)
+
+### Frontend → Vercel
+1. Go to [vercel.com](https://vercel.com) and import the repo
+2. Set **Root Directory** to `client`
+3. Add the environment variable:
+   ```env
+   VITE_API_URL=https://your-app.up.railway.app
+   ```
+4. Deploy — Vercel handles the rest automatically
 
 ---
 
